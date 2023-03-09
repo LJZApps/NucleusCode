@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "22532147657",
+    "project_id": "nucleus-social-app",
+    "storage_bucket": "nucleus-social-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:22532147657:android:478e8e5cbab954cd904018",
+        "android_client_info": {
+          "package_name": "com.ljz.nucleus"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "22532147657-srme7r5rqnq86pj35dm8l5p2lvrah8km.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCb0aoENuY78tenigF0eaQVvXVOHM4tAc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "22532147657-srme7r5rqnq86pj35dm8l5p2lvrah8km.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

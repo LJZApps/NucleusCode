@@ -13,8 +13,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,14 +33,14 @@ class Launcher : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             NucleusTheme {
-                showWelcomeUI()
+                ShowWelcomeUI()
             }
         }
     }
 }
 
 @Composable
-fun showWelcomeUI() {
+fun ShowWelcomeUI() {
 // A surface container using the 'background' color from the theme
     Surface(
         modifier = Modifier
@@ -57,9 +60,9 @@ fun showWelcomeUI() {
                     fontWeight = FontWeight.ExtraBold
                 ),
                 modifier = Modifier.constrainAs(welcomeText1) {
-                    top.linkTo(parent.top, margin = 40.dp)
-                    absoluteLeft.linkTo(parent.absoluteLeft, margin = 20.dp)
-                    absoluteRight.linkTo(parent.absoluteRight, margin = 20.dp)
+                    top.linkTo(parent.top, margin = 15.dp)
+                    absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                    absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
                     width = Dimension.fillToConstraints
                 })
 
@@ -70,20 +73,19 @@ fun showWelcomeUI() {
                     fontSize = 18.sp
                 ),
                 modifier = Modifier.constrainAs(welcomeText2) {
-                    top.linkTo(welcomeText1.bottom, margin = 15.dp)
-                    absoluteLeft.linkTo(parent.absoluteLeft, margin = 20.dp)
-                    absoluteRight.linkTo(parent.absoluteRight, margin = 20.dp)
+                    top.linkTo(welcomeText1.bottom, margin = 10.dp)
+                    absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                    absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
                     width = Dimension.fillToConstraints
                 }
             )
 
             Button(
                 onClick = {
-//                    context.startActivity(Intent(context, Login::class.java))
-//                    activity?.finish()
+                    context.startActivity(Intent(context, Login::class.java))
+                    activity?.finish()
                 },
                 modifier = Modifier.constrainAs(loginButton) {
-//                    top.linkTo(text.bottom, 0.dp)
                     absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
                     absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
                     bottom.linkTo(parent.bottom, margin = 15.dp)
@@ -104,6 +106,6 @@ fun showWelcomeUI() {
 fun DefaultPreview(
 ) {
     NucleusTheme {
-        showWelcomeUI()
+        ShowWelcomeUI()
     }
 }
