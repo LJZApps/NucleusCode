@@ -43,6 +43,8 @@ class Launcher : ComponentActivity() {
 
         auth = Firebase.auth
 
+        auth.currentUser?.uid
+
         setContent {
             NucleusTheme {
                 ShowWelcomeUI()
@@ -67,10 +69,17 @@ fun ShowWelcomeUI() {
         remoteConfig.setConfigSettingsAsync(configSettings)
 
         if(user != null) {
-            val context = LocalContext.current
-            val activity = (LocalContext.current as? Activity)
-            context.startActivity(Intent(context, Home::class.java))
-            activity?.finish()
+            if (!user.isEmailVerified) {
+                val context = LocalContext.current
+                val activity = (LocalContext.current as? Activity)
+                context.startActivity(Intent(context, Login::class.java))
+                activity?.finish()
+            } else {
+                val context = LocalContext.current
+                val activity = (LocalContext.current as? Activity)
+                context.startActivity(Intent(context, Home::class.java))
+                activity?.finish()
+            }
         } else {
             ConstraintLayout {
                 val (welcomeText1, welcomeText2, loginButton) = createRefs()
