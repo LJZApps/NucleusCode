@@ -2,6 +2,7 @@ package com.ljz.nucleus
 
 import android.app.Activity
 import android.content.Intent
+import android.icu.text.ListFormatter.Width
 import android.os.Bundle
 import android.util.Patterns
 import android.view.WindowManager
@@ -35,12 +36,14 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.NavHostController
@@ -48,12 +51,24 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdLoader
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.LoadAdError
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.ljz.nucleus.ui.theme.NucleusTheme
 import java.util.regex.Pattern
+import com.google.android.gms.ads.initialization.InitializationStatus
 
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener
+
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdOptions
 
 private lateinit var auth: FirebaseAuth
 private val PASSWORD_PATTERN: String =
@@ -100,7 +115,6 @@ fun RegisterNavHost(
         ) { backStateEntry ->
             backStateEntry.arguments?.getString("email")?.let {
                 RegisterHome(
-                    navToEmailCheck = { navController.navigate("checkEmail") },
                     navController = navController,
                     email = it
                 )
@@ -133,6 +147,7 @@ fun RegisterNavHost(
     }
 }
 
+
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterEmailCheck(
@@ -152,7 +167,7 @@ fun RegisterEmailCheck(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             ConstraintLayout {
-                val (loginText1, loginText2, emailInput, nextButton) = createRefs()
+                val (loginText1, loginText2, emailInput, nextButton, adView) = createRefs()
                 val emailInputTextState = remember { mutableStateOf(TextFieldValue()) }
                 val focusRequester = FocusRequester()
                 val keyboardController = LocalSoftwareKeyboardController.current
@@ -250,6 +265,7 @@ fun RegisterEmailCheck(
                                     }
                                     true
                                 }
+
                                 else -> false
                             }
                         },
@@ -318,11 +334,9 @@ fun RegisterEmailCheck(
     }
 }
 
-
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterHome(
-    navToEmailCheck: () -> Unit,
     navController: NavHostController,
     email: String? = "null"
 ) {
@@ -504,6 +518,7 @@ fun RegisterHome(
                                         signUpUser(email, passwordInputState.value.text)
                                         true
                                     }
+
                                     else -> false
                                 }
                             },
@@ -689,17 +704,24 @@ fun RegisterHome(
                                 // onDismissRequest.
                                 openDialog.value = false
                             },
-                            icon = { Icon(Icons.Filled.Password, contentDescription = "Passwort-Icon") },
+                            icon = {
+                                Icon(
+                                    Icons.Filled.Password,
+                                    contentDescription = "Passwort-Icon"
+                                )
+                            },
                             title = {
                                 Text(text = "Regeln für Passwörter")
                             },
                             text = {
-                                Text(text = "- Mindestens 8 Zeichen" +
-                                        "\n- Mindestens eine Ziffer (0-9)" +
-                                        "\n- Mindestens einen Kleinbuchstaben (a-z)" +
-                                        "\n- Mindestens einen Großbuchstaben (A-Z)" +
-                                        "\n- Mindestens ein Sonderzeichen aus folgenden Zeichenklassen: \n" +
-                                        "!@#&()-[{]}:;',.?/*~$^+=<>")
+                                Text(
+                                    text = "- Mindestens 8 Zeichen" +
+                                            "\n- Mindestens eine Ziffer (0-9)" +
+                                            "\n- Mindestens einen Kleinbuchstaben (a-z)" +
+                                            "\n- Mindestens einen Großbuchstaben (A-Z)" +
+                                            "\n- Mindestens ein Sonderzeichen aus folgenden Zeichenklassen: \n" +
+                                            "!@#&()-[{]}:;',.?/*~$^+=<>"
+                                )
                             },
                             confirmButton = {
 
@@ -824,6 +846,7 @@ fun LoginWithEmail(
                                     signInUser(email, passwordInputState.value.text)
                                     true
                                 }
+
                                 else -> false
                             }
                         },
@@ -980,7 +1003,6 @@ fun RegisterWithEmailPreview() {
     NucleusTheme {
         val navController = rememberNavController()
         RegisterHome(
-            navToEmailCheck = { navController.navigate("registerHome") },
             navController = navController,
             email = "leonzapke@gmail.com"
         )
