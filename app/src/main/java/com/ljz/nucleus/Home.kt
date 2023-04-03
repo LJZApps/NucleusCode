@@ -35,6 +35,7 @@ fun ShowHomeFeed() {
             .fillMaxHeight()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        Text(text = "Dies ist ein Platzhalter-Text.\nHier wird der Home-Bildschirm angezeigt.")
     }
 }
 

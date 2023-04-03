@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Nucleus</string>
-    <string name="title_activity_home">Home</string>
-    <string name="ad_mob_banner_id">ca-app-pub-7761903540001790/6520210075</string>
-    <string name="ad_mob_fluid_id">ca-app-pub-7761903540001790/6520210075</string>
+    <string name="ad_mob_banner_id" translatable="false">ca-app-pub-7761903540001790/6520210075</string>
+    <string name="ad_mob_fluid_id" translatable="false">ca-app-pub-7761903540001790/6520210075</string>
 </resources>

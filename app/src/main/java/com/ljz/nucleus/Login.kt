@@ -2,7 +2,6 @@ package com.ljz.nucleus
 
 import android.app.Activity
 import android.content.Intent
-import android.icu.text.ListFormatter.Width
 import android.os.Bundle
 import android.util.Patterns
 import android.view.WindowManager
@@ -11,39 +10,55 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Password
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.sharp.Help
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PaintingStyle.Companion.Stroke
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.*
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.NavHostController
@@ -51,28 +66,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.google.android.gms.ads.AdListener
-import com.google.android.gms.ads.AdLoader
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
-import com.google.android.gms.ads.LoadAdError
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.ljz.nucleus.database.UserDBHelper
 import com.ljz.nucleus.ui.theme.NucleusTheme
 import java.util.regex.Pattern
-import com.google.android.gms.ads.initialization.InitializationStatus
 
-import com.google.android.gms.ads.initialization.OnInitializationCompleteListener
-
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.nativead.NativeAd
-import com.google.android.gms.ads.nativead.NativeAdOptions
 
 private lateinit var auth: FirebaseAuth
 private val PASSWORD_PATTERN: String =
-    "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;.',?/*~$^+=<>]).{8,20}$"
+    "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;.',?/*~$^+=<>]).{8,}$"
 
 class Login : ComponentActivity() {
 
@@ -105,7 +110,7 @@ fun RegisterNavHost(
         startDestination = startDestination
     ) {
         composable("checkEmail") {
-            RegisterEmailCheck(
+            EmailCheck(
                 navController = navController
             )
         }
@@ -124,19 +129,24 @@ fun RegisterNavHost(
                 // nothing
             }
         }
+        composable("registerAccountInformation") {
+            RegisterAccount(navController = navController)
+
+            BackHandler(true) {
+                // Nothing
+            }
+        }
         composable(
-            "loginWithEmail?email={email}&fromRegister={fromRegister}",
+            "loginWithEmail?email={email}",
             arguments = listOf(
-                navArgument("email") { defaultValue = "null" },
-                navArgument("fromRegister") { defaultValue = false }
+                navArgument("email") { defaultValue = "null" }
             )
         ) { backStateEntry ->
             backStateEntry.arguments?.getString("email")?.let {
                 LoginWithEmail(
                     navToEmailCheck = { navController.navigate("checkEmail") },
                     navController = navController,
-                    email = it,
-                    fromRegister = backStateEntry.arguments?.getBoolean("fromRegister")
+                    email = it
                 )
             }
 
@@ -150,7 +160,7 @@ fun RegisterNavHost(
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterEmailCheck(
+fun EmailCheck(
     navController: NavHostController
 ) {
     val user = auth.currentUser
@@ -377,7 +387,9 @@ fun RegisterHome(
                     var errorMessageConfirmPassword: String by remember { mutableStateOf("") }
                     var isErrorConfirmPassword by rememberSaveable { mutableStateOf(false) }
                     val pattern = Pattern.compile(PASSWORD_PATTERN)
-                    var openDialog = remember { mutableStateOf(false) }
+                    var passwordDialog = remember { mutableStateOf(false) }
+                    var emailInfoDialog = remember { mutableStateOf(false) }
+                    val userDB = UserDBHelper(context, null)
 
                     fun validateFirstPassword(password: String) {
                         val matcher = pattern.matcher(password.trim())
@@ -408,8 +420,8 @@ fun RegisterHome(
                         //send email verification
                         firebaseUser!!.sendEmailVerification()
                             .addOnSuccessListener {
-                                Toast.makeText(context, "Instructions Sent...", Toast.LENGTH_SHORT)
-                                    .show()
+                                emailInfoDialog.value = true
+                                // mail-sent success
                             }
                             .addOnFailureListener { e ->
                                 Toast.makeText(
@@ -432,11 +444,15 @@ fun RegisterHome(
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
                                     // Sign in success, update UI with the signed-in user's information
-                                    Toast.makeText(context, "Account created!", Toast.LENGTH_SHORT)
-                                        .show()
                                     sendEmailVerification()
 
-                                    navController.navigate("loginWithEmail?email=${email}&fromRegister=${true}")
+                                    task.result.user?.email?.let {
+                                        task.result.user?.uid?.let { it1 ->
+                                            userDB.addUser(
+                                                it1,
+                                                it, passwordConfirmInputState.value.text)
+                                        }
+                                    }
                                 } else {
                                     nextButtonEnabled = true
                                     backButtonEnabled = true
@@ -561,7 +577,7 @@ fun RegisterHome(
                         trailingIcon = {
                             if (isErrorFirstPassword) {
                                 IconButton(
-                                    onClick = { openDialog.value = true },
+                                    onClick = { passwordDialog.value = true },
                                 ) {
                                     Icon(
                                         Icons.Sharp.Help,
@@ -696,13 +712,13 @@ fun RegisterHome(
                         )
                     }
 
-                    if (openDialog.value) {
+                    if (passwordDialog.value) {
                         AlertDialog(
                             onDismissRequest = {
                                 // Dismiss the dialog when the user clicks outside the dialog or on the back
                                 // button. If you want to disable that functionality, simply use an empty
                                 // onDismissRequest.
-                                openDialog.value = false
+                                passwordDialog.value = false
                             },
                             icon = {
                                 Icon(
@@ -720,7 +736,7 @@ fun RegisterHome(
                                             "\n- Mindestens einen Kleinbuchstaben (a-z)" +
                                             "\n- Mindestens einen Großbuchstaben (A-Z)" +
                                             "\n- Mindestens ein Sonderzeichen aus folgenden Zeichenklassen: \n" +
-                                            "!@#&()-[{]}:;',.?/*~$^+=<>"
+                                            "!@#&()-[]{}:;',.?/*~$^+=<>"
                                 )
                             },
                             confirmButton = {
@@ -729,12 +745,54 @@ fun RegisterHome(
                             dismissButton = {
                                 TextButton(
                                     onClick = {
-                                        openDialog.value = false
+                                        passwordDialog.value = false
                                     }
                                 ) {
                                     Text("Alles klar.")
                                 }
                             }
+                        )
+                    }
+
+                    if (emailInfoDialog.value) {
+                        AlertDialog(
+                            onDismissRequest = {
+                                // Dismiss the dialog when the user clicks outside the dialog or on the back
+                                // button. If you want to disable that functionality, simply use an empty
+                                // onDismissRequest.
+                                //openDialog.value = false
+                            },
+                            icon = {
+                                Icon(
+                                    Icons.Filled.Info,
+                                    contentDescription = "Infro-Icon"
+                                )
+                            },
+                            title = {
+                                Text(text = "Bestätige deine E-Mail-Adresse")
+                            },
+                            text = {
+                                Text(
+                                    text = "Wir haben dir eine Bestätigungs-Email geschickt." +
+                                            "\nBitte bestätige deine E-Mail-Adresse um diesen Account nutzen zu können." +
+                                            "\nWenn du keine Email in deinem Postfach sehen kannst, schau bitte in deinem Spam-Ordner nach."
+                                )
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        emailInfoDialog.value = false
+                                        navController.navigate("registerAccountInformation")
+                                        //context.startActivity(Intent(context, Home::class.java))
+                                        //activity?.finish()
+                                    }
+                                ) {
+                                    Text("Weiter")
+                                }
+                            },
+                            dismissButton = {
+                                // Nothing
+                            },
                         )
                     }
                 }
@@ -745,11 +803,25 @@ fun RegisterHome(
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
+fun RegisterAccount(
+    navController: NavHostController
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        auth.currentUser?.uid?.let { Text(text = it) }
+    }
+}
+
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
+@Composable
 fun LoginWithEmail(
     navToEmailCheck: () -> Unit,
     navController: NavHostController,
-    email: String? = "null",
-    fromRegister: Boolean? = false
+    email: String? = "null"
 ) {
     Surface(
         modifier = Modifier
@@ -768,7 +840,7 @@ fun LoginWithEmail(
                 val focusRequester = FocusRequester()
                 val keyboardController = LocalSoftwareKeyboardController.current
                 val context = LocalContext.current
-                var nextButtonEnabled by remember { mutableStateOf(false) }
+                var nextButtonEnabled by remember { mutableStateOf(true) }
                 var backButtonEnabled by remember { mutableStateOf(true) }
                 val activity = (LocalContext.current as? Activity)
 
@@ -779,9 +851,17 @@ fun LoginWithEmail(
                                 // Sign in success, update UI with the signed-in user's information
                                 nextButtonEnabled = true
                                 val user = auth.currentUser
-                                Toast.makeText(context, "Signed in", Toast.LENGTH_SHORT).show()
-                                context.startActivity(Intent(context, Home::class.java))
-                                activity?.finish()
+
+                                if (auth.currentUser?.isEmailVerified == true) {
+                                    context.startActivity(Intent(context, Home::class.java))
+                                    activity?.finish()
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Nicht verifiziert.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             } else {
                                 nextButtonEnabled = true
                                 // If sign in fails, display a message to the user.
@@ -872,102 +952,52 @@ fun LoginWithEmail(
                     onDispose { }
                 }
 
-                if (fromRegister == false) {
+                Text(
+                    "Deine E-Mail-Adresse ist bei uns registriert.\nZeit zum Anmelden!",
+                    modifier = Modifier.constrainAs(loginText2) {
+                        top.linkTo(loginText1.bottom, 5.dp)
+                        absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                        absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
+                        width = Dimension.fillToConstraints
+                    }
+                )
+
+                Button(
+                    onClick = {
+                        nextButtonEnabled = false
+                        signInUser(email, passwordInputState.value.text)
+                    },
+                    enabled = nextButtonEnabled,
+                    modifier = Modifier.constrainAs(nextButton) {
+                        absoluteLeft.linkTo(backButton.absoluteRight, margin = 15.dp)
+                        absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
+                        bottom.linkTo(parent.bottom, margin = 15.dp)
+                        width = Dimension.fillToConstraints
+                    }
+                ) {
                     Text(
-                        "Deine E-Mail-Adresse ist bei uns registriert.\nZeit zum Anmelden!",
-                        modifier = Modifier.constrainAs(loginText2) {
-                            top.linkTo(loginText1.bottom, 5.dp)
-                            absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
-                            absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
-                            width = Dimension.fillToConstraints
-                        }
+                        "Anmelden",
+                        style = TextStyle(fontSize = 15.sp)
                     )
+                }
 
-                    Button(
-                        onClick = {
-                            nextButtonEnabled = false
-                            signInUser(email, passwordInputState.value.text)
-                        },
-                        enabled = nextButtonEnabled,
-                        modifier = Modifier.constrainAs(nextButton) {
-                            absoluteLeft.linkTo(backButton.absoluteRight, margin = 15.dp)
-                            absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
-                            bottom.linkTo(parent.bottom, margin = 15.dp)
-                            width = Dimension.fillToConstraints
-                        }
-                    ) {
-                        Text(
-                            "Anmelden",
-                            style = TextStyle(fontSize = 15.sp)
-                        )
+                Button(
+                    onClick = {
+                        nextButtonEnabled = false
+                        navController.popBackStack()
+                    },
+                    enabled = backButtonEnabled,
+                    modifier = Modifier.constrainAs(backButton) {
+                        absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                        absoluteRight.linkTo(nextButton.absoluteLeft, margin = 15.dp)
+                        bottom.linkTo(parent.bottom, margin = 15.dp)
+                        width = Dimension.fillToConstraints
                     }
-
-                    Button(
-                        onClick = {
-                            nextButtonEnabled = false
-                            navController.popBackStack()
-                        },
-                        enabled = backButtonEnabled,
-                        modifier = Modifier.constrainAs(backButton) {
-                            absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
-                            absoluteRight.linkTo(nextButton.absoluteLeft, margin = 15.dp)
-                            bottom.linkTo(parent.bottom, margin = 15.dp)
-                            width = Dimension.fillToConstraints
-                        }
-                    ) {
-                        Text(
-                            "Zurück",
-                            style = TextStyle(fontSize = 15.sp)
-                        )
-                    }
-                } else {
+                ) {
                     Text(
-                        "Bitte bestätige deine E-Mail und melde dich an!",
-                        modifier = Modifier.constrainAs(loginText2) {
-                            top.linkTo(loginText1.bottom, 5.dp)
-                            absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
-                            absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
-                            width = Dimension.fillToConstraints
-                        }
+                        "Zurück",
+                        style = TextStyle(fontSize = 15.sp)
                     )
-
-                    Button(
-                        onClick = {
-                            nextButtonEnabled = false
-                            signInUser(email, passwordInputState.value.text)
-                        },
-                        enabled = nextButtonEnabled,
-                        modifier = Modifier.constrainAs(nextButton) {
-                            absoluteLeft.linkTo(backButton.absoluteRight, margin = 15.dp)
-                            absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
-                            bottom.linkTo(parent.bottom, margin = 15.dp)
-                            width = Dimension.fillToConstraints
-                        }
-                    ) {
-                        Text(
-                            "Anmelden",
-                            style = TextStyle(fontSize = 15.sp)
-                        )
-                    }
-
-                    Button(
-                        onClick = {
-                            auth.signOut()
-                            navController.navigate("checkEmail")
-                        },
-                        enabled = backButtonEnabled,
-                        modifier = Modifier.constrainAs(backButton) {
-                            absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
-                            absoluteRight.linkTo(nextButton.absoluteLeft, margin = 15.dp)
-                            bottom.linkTo(parent.bottom, margin = 15.dp)
-                            width = Dimension.fillToConstraints
-                        }
-                    ) {
-                        Text(
-                            "Abmelden",
-                            style = TextStyle(fontSize = 15.sp)
-                        )
-                    }
                 }
             }
         }
@@ -980,7 +1010,7 @@ fun LoginWithEmail(
 fun EmailCheckPreview() {
     NucleusTheme {
         val navController = rememberNavController()
-        RegisterEmailCheck(navController = navController)
+        EmailCheck(navController = navController)
     }
 }
 
