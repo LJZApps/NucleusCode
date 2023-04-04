@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Nucleus</string>
+    <string name="errorMessage_emailNotValid">Ungültige E-Mail-Adresse</string>
+    <string name="mailCheck_letsBegin">Lass uns beginnen…</string>
+    <string name="mailCheck_letsBegin2">Wir checken erstmal, ob deine E-Mail-Adresse bei uns schon registriert ist.</string>
+    <string name="input_email">E-Mail</string>
+    <string name="buttonText_next">Weiter</string>
+    <string name="launcherWelcome_welcomeTextTitle">Willkommen bei Nucleus!</string>
+    <string name="launcherWelcome_welcomeText1">Unsere Social-Media-Plattform ist darauf ausgelegt, dass du dich sicher und wohl fühlen kannst, während du durch Beiträge scrollst und mit deinen Freunden chattest.\nWir legen besonderen Wert auf Datenschutz und Individualität und bieten ein einzigartiges Erlebnis, das auf deine Interessen und Vorlieben zugeschnitten ist, ohne das deine Daten an Dritte weitergegeben werden.</string>
+    <string name="buttonText_login">Anmelden</string>
+    <string name="errorMessage_invalidPassword">Ungültiges Passwort.</string>
+    <string name="errorMessage_passwordNotMatch">Passwörter stimmen nicht überein.</string>
+    <string name="registerHome_title">Registrieren</string>
+    <string name="registerHome_text1">Diese E-Mail-Adresse ist bei uns noch nicht registriert.\nLass uns das ändern!</string>
+    <string name="input_password">Passwort</string>
+    <string name="input_confirmPassword">Passwort bestätigen</string>
+    <string name="buttonText_signUp">Registrieren</string>
+    <string name="buttonText_back">Zurück</string>
+    <string name="registerHome_passwordDialogTitle">Passwort-Vorgaben</string>
+    <string name="buttonText_gotIt">Verstanden</string>
+    <string name="registerHome_passwordDialogText">- Mindestens 8 Zeichen\n- Mindestens eine Ziffer (0–9)\n- Mindestens einen Kleinbuchstaben (a-z)\n- Mindestens einen Großbuchstaben (A-Z)\n- Mindestens ein Sonderzeichen aus folgenden Zeichenklassen:\n!@#&amp;()-[]{}:;\',.?/*~$^+=</string>
+    <string name="registerHome_verifyEmailDialogTitle">Bestätige deine E-Mail-Adresse</string>
+    <string name="registerHome_verifyEmailDialogText">Wir haben dir eine Bestätigungs-Email geschickt. \nBitte bestätige deine E-Mail-Adresse um diesen Account nutzen zu können.\nWenn du keine Email in deinem Postfach sehen kannst, schau bitte in deinem Spam-Ordner nach.</string>
+    <string name="errorMessage_emailNotConfirmed">Diese E-Mail-Adresse wurde noch nicht bestätigt.</string>
+    <string name="errorMessage_passwordTooShort">Passwort muss mindestens 8 Zeichen lang sein.</string>
+    <string name="loginWithEmail_title">Anmelden</string>
+    <string name="loginWithEmail_text1">Deine E-Mail-Adresse ist bei uns schon registriert.\nZeit zum Anmelden!</string>
+    <string name="buttonText_resetPassword">Passwort zurücksetzen</string>
+    <string name="resetPassword_title">Passwort zurücksetzen</string>
+    <string name="resetPassword_text1">Du hast dein Passwort vergessen? Kein Problem!\nGib einfach deine E-Mail-Adresse ein und wir schicken dir eine E-Mail, womit du dein Passwort neu eingeben kannst.</string>
+    <string name="buttonText_sendLink">Link senden</string>
+    <string name="resetPassword_resetDialogText">Wir haben dir eine E-Mail zum zurücksetzen deines Passwortes geschickt.\nWenn du keine Email in deinem Postfach sehen kannst, schau bitte in deinem Spam-Ordner nach.</string>
+    <string name="resetPassword_resetDialogTitle">E-Mail gesendet!</string>
+</resources>

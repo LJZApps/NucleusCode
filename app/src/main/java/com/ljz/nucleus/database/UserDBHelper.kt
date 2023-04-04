@@ -40,6 +40,14 @@ class UserDBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
         db.close()
     }
 
+    fun finishRegister(uid: String) {
+        val db = this.writableDatabase
+
+        db.execSQL("UPDATE 'UserData' SET 'register_finished' = 1 WHERE 'uid' = '$uid'")
+
+        db.close()
+    }
+
     fun getPassword(uid: String): String {
         val db = this.readableDatabase
         val returnValue: String

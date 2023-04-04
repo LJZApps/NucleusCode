@@ -21,23 +21,9 @@ import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.sharp.Help
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -49,13 +35,10 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.*
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -67,7 +50,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.ljz.nucleus.database.UserDBHelper
@@ -77,7 +59,7 @@ import java.util.regex.Pattern
 
 private lateinit var auth: FirebaseAuth
 private val PASSWORD_PATTERN: String =
-    "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;.',?/*~$^+=<>]).{8,}$"
+    "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;.',?/*~$^+=]).{8,}$"
 
 class Login : ComponentActivity() {
 
@@ -126,11 +108,18 @@ fun RegisterNavHost(
             }
 
             BackHandler(true) {
-                // nothing
+                // Nothing
             }
         }
         composable("registerAccountInformation") {
             RegisterAccount(navController = navController)
+
+            BackHandler(true) {
+                // Nothing
+            }
+        }
+        composable("resetPassword") {
+            ResetPassword(navController = navController)
 
             BackHandler(true) {
                 // Nothing
@@ -151,7 +140,7 @@ fun RegisterNavHost(
             }
 
             BackHandler(true) {
-                // nothing
+                // Nothing
             }
         }
     }
@@ -163,182 +152,175 @@ fun RegisterNavHost(
 fun EmailCheck(
     navController: NavHostController
 ) {
-    val user = auth.currentUser
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        ConstraintLayout {
+            val (loginText1, loginText2, emailInput, nextButton, adView) = createRefs()
+            val emailInputTextState = remember { mutableStateOf(TextFieldValue()) }
+            val focusRequester = FocusRequester()
+            val keyboardController = LocalSoftwareKeyboardController.current
+            val context = LocalContext.current
+            val focusManager = LocalFocusManager.current
+            var nextButtonEnabled by remember { mutableStateOf(false) }
+            var errorMessage by remember { mutableStateOf("") }
+            var isError by rememberSaveable { mutableStateOf(false) }
 
-    if (user != null) {
-        if (!user.isEmailVerified) {
-            navController.navigate("loginWithEmail?email=${auth.currentUser?.email}&fromRegister=true")
-        }
-    } else {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            ConstraintLayout {
-                val (loginText1, loginText2, emailInput, nextButton, adView) = createRefs()
-                val emailInputTextState = remember { mutableStateOf(TextFieldValue()) }
-                val focusRequester = FocusRequester()
-                val keyboardController = LocalSoftwareKeyboardController.current
-                val context = LocalContext.current
-                val focusManager = LocalFocusManager.current
-                var nextButtonEnabled by remember { mutableStateOf(false) }
-                var errorMessage by remember { mutableStateOf("") }
-                var isError by rememberSaveable { mutableStateOf(false) }
-
-                fun validateEmail(text: String) {
-                    if (!Patterns.EMAIL_ADDRESS.matcher(text).matches()) {
-                        isError = true
-                        errorMessage = "E-Mail-Adresse nicht gültig"
-                    } else {
-                        isError = false
-                    }
-
-                    nextButtonEnabled = !isError
+            fun validateEmail(text: String) {
+                if (!Patterns.EMAIL_ADDRESS.matcher(text).matches()) {
+                    isError = true
+                    errorMessage = context.resources.getString(R.string.errorMessage_emailNotValid)
+                } else {
+                    isError = false
                 }
 
-                Text("Lass uns beginnen...",
-                    style = TextStyle(
-                        fontSize = 25.sp,
-                        fontWeight = FontWeight.ExtraBold
-                    ),
-                    modifier = Modifier.constrainAs(loginText1) {
-                        top.linkTo(parent.top, margin = 15.dp)
-                        absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
-                        absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
+                nextButtonEnabled = !isError
+            }
+
+            Text(
+                stringResource(id = R.string.mailCheck_letsBegin),
+                style = TextStyle(
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.ExtraBold
+                ),
+                modifier = Modifier.constrainAs(loginText1) {
+                    top.linkTo(parent.top, margin = 15.dp)
+                    absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                    absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
+                    width = Dimension.fillToConstraints
+                }
+            )
+
+            Text(
+                stringResource(R.string.mailCheck_letsBegin2),
+                modifier = Modifier.constrainAs(loginText2) {
+                    top.linkTo(loginText1.bottom, 5.dp)
+                    absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                    absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
+                    width = Dimension.fillToConstraints
+                }
+            )
+
+            OutlinedTextField(
+                value = emailInputTextState.value,
+                onValueChange = {
+                    emailInputTextState.value = it
+                    validateEmail(emailInputTextState.value.text)
+                },
+                shape = RoundedCornerShape(15.dp),
+                isError = isError,
+                supportingText = {
+                    if (isError) {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = errorMessage,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                trailingIcon = {
+                    if (isError) {
+                        Icon(Icons.Filled.Info, "error", tint = MaterialTheme.colorScheme.error)
+                    }
+                },
+                modifier = Modifier
+                    .constrainAs(emailInput) {
+                        top.linkTo(loginText2.bottom, 15.dp)
+                        absoluteLeft.linkTo(parent.absoluteLeft, 15.dp)
+                        absoluteRight.linkTo(parent.absoluteRight, 15.dp)
                         width = Dimension.fillToConstraints
                     }
-                )
-
-                Text(
-                    "Wir checken erstmal, ob deine E-Mail-Adresse bei uns schon registriert ist.",
-                    modifier = Modifier.constrainAs(loginText2) {
-                        top.linkTo(loginText1.bottom, 5.dp)
-                        absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
-                        absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
-                        width = Dimension.fillToConstraints
+                    .focusRequester(focusRequester)
+                    .onFocusChanged {
+                        if (it.isFocused) {
+                            keyboardController?.show()
+                        }
                     }
-                )
-
-                OutlinedTextField(
-                    value = emailInputTextState.value,
-                    onValueChange = {
-                        emailInputTextState.value = it
-                        validateEmail(emailInputTextState.value.text)
-                    },
-                    shape = RoundedCornerShape(15.dp),
-                    isError = isError,
-                    supportingText = {
-                        if (isError) {
-                            Text(
-                                modifier = Modifier.fillMaxWidth(),
-                                text = errorMessage,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    },
-                    trailingIcon = {
-                        if (isError) {
-                            Icon(Icons.Filled.Info, "error", tint = MaterialTheme.colorScheme.error)
-                        }
-                    },
-                    modifier = Modifier
-                        .constrainAs(emailInput) {
-                            top.linkTo(loginText2.bottom, 15.dp)
-                            absoluteLeft.linkTo(parent.absoluteLeft, 15.dp)
-                            absoluteRight.linkTo(parent.absoluteRight, 15.dp)
-                            width = Dimension.fillToConstraints
-                        }
-                        .focusRequester(focusRequester)
-                        .onFocusChanged {
-                            if (it.isFocused) {
-                                keyboardController?.show()
-                            }
-                        }
-                        .onKeyEvent { event ->
-                            when (event.key) {
-                                Key.Enter -> {
-                                    if (nextButtonEnabled) {
-                                        nextButtonEnabled = false
-                                        auth
-                                            .fetchSignInMethodsForEmail(emailInputTextState.value.text)
-                                            .addOnCompleteListener { task ->
-                                                nextButtonEnabled = true
-                                                val isNewUser = task.result.signInMethods?.isEmpty()
-                                                if (isNewUser == true) {
-                                                    navController.navigate("registerWithEmail?email=${emailInputTextState.value.text}")
-                                                } else {
-                                                    navController.navigate("loginWithEmail?email=${emailInputTextState.value.text}")
-                                                }
+                    .onKeyEvent { event ->
+                        when (event.key) {
+                            Key.Enter -> {
+                                if (nextButtonEnabled) {
+                                    nextButtonEnabled = false
+                                    auth
+                                        .fetchSignInMethodsForEmail(emailInputTextState.value.text)
+                                        .addOnCompleteListener { task ->
+                                            nextButtonEnabled = true
+                                            val isNewUser = task.result.signInMethods?.isEmpty()
+                                            if (isNewUser == true) {
+                                                navController.navigate("registerWithEmail?email=${emailInputTextState.value.text}")
+                                            } else {
+                                                navController.navigate("loginWithEmail?email=${emailInputTextState.value.text}")
                                             }
-                                    }
-                                    true
-                                }
-
-                                else -> false
-                            }
-                        },
-                    label = { Text("E-Mail") },
-                    singleLine = true,
-                    keyboardActions = KeyboardActions(
-                        // Handle done, next,... buttons on keyboard
-                        onNext = {
-                            if (nextButtonEnabled) {
-                                nextButtonEnabled = false
-                                auth.fetchSignInMethodsForEmail(emailInputTextState.value.text)
-                                    .addOnCompleteListener { task ->
-                                        nextButtonEnabled = true
-                                        val isNewUser = task.result.signInMethods?.isEmpty()
-                                        if (isNewUser == true) {
-                                            navController.navigate("registerWithEmail?email=${emailInputTextState.value.text}")
-                                        } else {
-                                            navController.navigate("loginWithEmail?email=${emailInputTextState.value.text}")
                                         }
+                                }
+                                true
+                            }
+
+                            else -> false
+                        }
+                    },
+                label = { Text(stringResource(R.string.input_email)) },
+                singleLine = true,
+                keyboardActions = KeyboardActions(
+                    // Handle done, next,... buttons on keyboard
+                    onNext = {
+                        if (nextButtonEnabled) {
+                            nextButtonEnabled = false
+                            auth.fetchSignInMethodsForEmail(emailInputTextState.value.text)
+                                .addOnCompleteListener { task ->
+                                    nextButtonEnabled = true
+                                    val isNewUser = task.result.signInMethods?.isEmpty()
+                                    if (isNewUser == true) {
+                                        navController.navigate("registerWithEmail?email=${emailInputTextState.value.text}")
+                                    } else {
+                                        navController.navigate("loginWithEmail?email=${emailInputTextState.value.text}")
                                     }
+                                }
+                        }
+                    }
+                ),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                )
+            )
+
+            DisposableEffect(Unit) {
+                focusRequester.requestFocus()
+                onDispose { }
+            }
+
+            Button(
+                onClick = {
+                    nextButtonEnabled = false
+                    auth.fetchSignInMethodsForEmail(emailInputTextState.value.text)
+                        .addOnCompleteListener { task ->
+                            val isNewUser = task.result.signInMethods?.isEmpty()
+                            nextButtonEnabled = true
+                            if (isNewUser == true) {
+                                navController.navigate("registerWithEmail?email=${emailInputTextState.value.text}")
+                                //Log.e("TAG", "Is New User!")
+                            } else {
+                                navController.navigate("loginWithEmail?email=${emailInputTextState.value.text}")
+                                //Log.e("TAG", "Is Old User!")
                             }
                         }
-                    ),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Next
-                    )
+                },
+                enabled = nextButtonEnabled,
+                modifier = Modifier.constrainAs(nextButton) {
+                    absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                    absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
+                    bottom.linkTo(parent.bottom, margin = 15.dp)
+                    width = Dimension.fillToConstraints
+                }
+            ) {
+                Text(
+                    stringResource(id = R.string.buttonText_next),
+                    style = TextStyle(fontSize = 15.sp)
                 )
-
-                DisposableEffect(Unit) {
-                    focusRequester.requestFocus()
-                    onDispose { }
-                }
-
-                Button(
-                    onClick = {
-                        nextButtonEnabled = false
-                        auth.fetchSignInMethodsForEmail(emailInputTextState.value.text)
-                            .addOnCompleteListener { task ->
-                                val isNewUser = task.result.signInMethods?.isEmpty()
-                                nextButtonEnabled = true
-                                if (isNewUser == true) {
-                                    navController.navigate("registerWithEmail?email=${emailInputTextState.value.text}")
-                                    //Log.e("TAG", "Is New User!")
-                                } else {
-                                    navController.navigate("loginWithEmail?email=${emailInputTextState.value.text}")
-                                    //Log.e("TAG", "Is Old User!")
-                                }
-                            }
-                    },
-                    enabled = nextButtonEnabled,
-                    modifier = Modifier.constrainAs(nextButton) {
-                        absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
-                        absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
-                        bottom.linkTo(parent.bottom, margin = 15.dp)
-                        width = Dimension.fillToConstraints
-                    }
-                ) {
-                    Text(
-                        "Weiter",
-                        style = TextStyle(fontSize = 15.sp)
-                    )
-                }
             }
         }
     }
@@ -363,9 +345,9 @@ fun RegisterHome(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             if (email == "null") {
-                Text(text = "No email specified.")
+                navController.popBackStack()
             } else {
-                ConstraintLayout() {
+                ConstraintLayout {
                     val (loginText1, loginText2, emailInput, passwordInput, confirmPasswordInput, nextButton, backButton) = createRefs()
                     val passwordInputState = remember { mutableStateOf(TextFieldValue()) }
                     val passwordConfirmInputState = remember { mutableStateOf(TextFieldValue()) }
@@ -398,7 +380,7 @@ fun RegisterHome(
                             isErrorFirstPassword = false
                         } else {
                             isErrorFirstPassword = true
-                            errorMessageFirstPassword = "Passwort ist nicht gültig."
+                            errorMessageFirstPassword = context.resources.getString(R.string.errorMessage_invalidPassword)
                         }
                     }
 
@@ -407,7 +389,7 @@ fun RegisterHome(
                             isErrorConfirmPassword = false
                         } else {
                             isErrorConfirmPassword = true
-                            errorMessageConfirmPassword = "Passwörter stimmt nicht überein"
+                            errorMessageConfirmPassword = context.resources.getString(R.string.errorMessage_passwordNotMatch)
                         }
                     }
 
@@ -424,13 +406,9 @@ fun RegisterHome(
                                 // mail-sent success
                             }
                             .addOnFailureListener { e ->
-                                Toast.makeText(
-                                    context,
-                                    "Failed to send due to " + e.message,
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                isErrorConfirmPassword = true
+                                errorMessageConfirmPassword = e.message.toString()
                             }
-
                     }
 
                     fun validateButton() {
@@ -450,7 +428,8 @@ fun RegisterHome(
                                         task.result.user?.uid?.let { it1 ->
                                             userDB.addUser(
                                                 it1,
-                                                it, passwordConfirmInputState.value.text)
+                                                it, passwordConfirmInputState.value.text
+                                            )
                                         }
                                     }
                                 } else {
@@ -466,7 +445,8 @@ fun RegisterHome(
                             }
                     }
 
-                    Text("Registrieren",
+                    Text(
+                        stringResource(R.string.registerHome_title),
                         style = TextStyle(
                             fontSize = 25.sp,
                             fontWeight = FontWeight.ExtraBold
@@ -480,7 +460,7 @@ fun RegisterHome(
                     )
 
                     Text(
-                        "Diese E-Mail-Adresse ist bei uns noch nicht registriert.\nLass uns das ändern!",
+                        stringResource(id = R.string.registerHome_text1),
                         modifier = Modifier.constrainAs(loginText2) {
                             top.linkTo(loginText1.bottom, 5.dp)
                             absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
@@ -501,7 +481,7 @@ fun RegisterHome(
                                 absoluteRight.linkTo(parent.absoluteRight, 15.dp)
                                 width = Dimension.fillToConstraints
                             },
-                        label = { Text("E-Mail") },
+                        label = { Text(stringResource(id = R.string.input_email)) },
                         singleLine = true,
                     )
 
@@ -538,7 +518,7 @@ fun RegisterHome(
                                     else -> false
                                 }
                             },
-                        label = { Text("Passwort") },
+                        label = { Text(stringResource(id = R.string.input_password)) },
                         singleLine = true,
                         isError = isErrorFirstPassword,
                         keyboardActions = KeyboardActions(
@@ -619,7 +599,7 @@ fun RegisterHome(
                                     keyboardController?.show()
                                 }
                             },
-                        label = { Text("Passwort bestätigen") },
+                        label = { Text(stringResource(id = R.string.input_confirmPassword)) },
                         singleLine = true,
                         keyboardActions = KeyboardActions(
                             // Handle done, next,... buttons on keyboard
@@ -688,7 +668,7 @@ fun RegisterHome(
                         }
                     ) {
                         Text(
-                            "Registrieren",
+                            stringResource(id = R.string.buttonText_signUp),
                             style = TextStyle(fontSize = 15.sp)
                         )
                     }
@@ -707,7 +687,7 @@ fun RegisterHome(
                         }
                     ) {
                         Text(
-                            "Zurück",
+                            stringResource(id = R.string.buttonText_back),
                             style = TextStyle(fontSize = 15.sp)
                         )
                     }
@@ -723,33 +703,28 @@ fun RegisterHome(
                             icon = {
                                 Icon(
                                     Icons.Filled.Password,
-                                    contentDescription = "Passwort-Icon"
+                                    contentDescription = "Password icon"
                                 )
                             },
                             title = {
-                                Text(text = "Regeln für Passwörter")
+                                Text(text = stringResource(id = R.string.registerHome_passwordDialogTitle))
                             },
                             text = {
                                 Text(
-                                    text = "- Mindestens 8 Zeichen" +
-                                            "\n- Mindestens eine Ziffer (0-9)" +
-                                            "\n- Mindestens einen Kleinbuchstaben (a-z)" +
-                                            "\n- Mindestens einen Großbuchstaben (A-Z)" +
-                                            "\n- Mindestens ein Sonderzeichen aus folgenden Zeichenklassen: \n" +
-                                            "!@#&()-[]{}:;',.?/*~$^+=<>"
+                                    text = stringResource(id = R.string.registerHome_passwordDialogText)
                                 )
                             },
                             confirmButton = {
-
-                            },
-                            dismissButton = {
                                 TextButton(
                                     onClick = {
                                         passwordDialog.value = false
                                     }
                                 ) {
-                                    Text("Alles klar.")
+                                    Text(stringResource(id = R.string.buttonText_gotIt))
                                 }
+                            },
+                            dismissButton = {
+
                             }
                         )
                     }
@@ -765,17 +740,15 @@ fun RegisterHome(
                             icon = {
                                 Icon(
                                     Icons.Filled.Info,
-                                    contentDescription = "Infro-Icon"
+                                    contentDescription = "Info icon"
                                 )
                             },
                             title = {
-                                Text(text = "Bestätige deine E-Mail-Adresse")
+                                Text(text = stringResource(id = R.string.registerHome_verifyEmailDialogTitle))
                             },
                             text = {
                                 Text(
-                                    text = "Wir haben dir eine Bestätigungs-Email geschickt." +
-                                            "\nBitte bestätige deine E-Mail-Adresse um diesen Account nutzen zu können." +
-                                            "\nWenn du keine Email in deinem Postfach sehen kannst, schau bitte in deinem Spam-Ordner nach."
+                                    text = stringResource(id = R.string.registerHome_verifyEmailDialogText)
                                 )
                             },
                             confirmButton = {
@@ -787,7 +760,7 @@ fun RegisterHome(
                                         //activity?.finish()
                                     }
                                 ) {
-                                    Text("Weiter")
+                                    Text(stringResource(id = R.string.buttonText_gotIt))
                                 }
                             },
                             dismissButton = {
@@ -830,51 +803,66 @@ fun LoginWithEmail(
             .background(MaterialTheme.colorScheme.background)
     ) {
         if (email == "null") {
-            Text(text = "No email specified.")
+            navController.popBackStack()
         } else {
             val context = LocalContext.current
 
             ConstraintLayout() {
-                val (loginText1, loginText2, emailInput, passwordInput, nextButton, backButton) = createRefs()
+                val (loginText1, loginText2, emailInput, passwordInput, nextButton, backButton, forgotPassText) = createRefs()
                 val passwordInputState = remember { mutableStateOf(TextFieldValue()) }
+                var passwordVisible: Boolean by rememberSaveable { mutableStateOf(false) }
+                var errorPasswordMessage: String by remember { mutableStateOf("An error occurred") }
+                var isErrorPasswordMessage by rememberSaveable { mutableStateOf(false) }
                 val focusRequester = FocusRequester()
                 val keyboardController = LocalSoftwareKeyboardController.current
-                val context = LocalContext.current
-                var nextButtonEnabled by remember { mutableStateOf(true) }
+                var nextButtonEnabled by remember { mutableStateOf(false) }
                 var backButtonEnabled by remember { mutableStateOf(true) }
                 val activity = (LocalContext.current as? Activity)
 
                 fun signInUser(email: String, password: String) {
+                    nextButtonEnabled = false
+                    backButtonEnabled = false
+                    isErrorPasswordMessage = false
+
+
                     auth.signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener { task ->
+                            nextButtonEnabled = true
+                            backButtonEnabled = true
                             if (task.isSuccessful) {
                                 // Sign in success, update UI with the signed-in user's information
-                                nextButtonEnabled = true
                                 val user = auth.currentUser
 
-                                if (auth.currentUser?.isEmailVerified == true) {
+                                if (task.result.user?.isEmailVerified == true) {
                                     context.startActivity(Intent(context, Home::class.java))
                                     activity?.finish()
                                 } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Nicht verifiziert.",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    isErrorPasswordMessage = true
+                                    errorPasswordMessage = context.resources.getString(R.string.errorMessage_emailNotConfirmed)
                                 }
                             } else {
-                                nextButtonEnabled = true
                                 // If sign in fails, display a message to the user.
-                                Toast.makeText(
-                                    context,
-                                    task.exception?.localizedMessage,
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                isErrorPasswordMessage = true
+                                errorPasswordMessage = task.exception?.localizedMessage.toString()
                             }
                         }
                 }
 
-                Text("Anmelden",
+                fun validateButton() {
+                    nextButtonEnabled = !isErrorPasswordMessage
+                }
+
+                fun validateFirstPassword(password: String) {
+                    if (password.length < 8) {
+                        isErrorPasswordMessage = true
+                        errorPasswordMessage = context.resources.getString(R.string.errorMessage_passwordTooShort)
+                    } else {
+                        isErrorPasswordMessage = false
+                    }
+                }
+
+                Text(
+                    stringResource(id = R.string.loginWithEmail_title),
                     style = TextStyle(
                         fontSize = 25.sp,
                         fontWeight = FontWeight.ExtraBold
@@ -899,13 +887,18 @@ fun LoginWithEmail(
                             absoluteRight.linkTo(parent.absoluteRight, 15.dp)
                             width = Dimension.fillToConstraints
                         },
-                    label = { Text("E-Mail") },
+                    label = { Text(stringResource(id = R.string.input_email)) },
                     singleLine = true,
                 )
 
                 OutlinedTextField(
                     value = passwordInputState.value,
-                    onValueChange = { passwordInputState.value = it },
+                    onValueChange = {
+                        passwordInputState.value = it
+                        validateFirstPassword(passwordInputState.value.text)
+                        validateButton()
+                    },
+                    isError = isErrorPasswordMessage,
                     shape = RoundedCornerShape(15.dp),
                     modifier = Modifier
                         .constrainAs(passwordInput) {
@@ -930,21 +923,54 @@ fun LoginWithEmail(
                                 else -> false
                             }
                         },
-                    label = { Text("Passwort") },
+                    label = { Text(stringResource(id = R.string.input_password)) },
                     singleLine = true,
                     keyboardActions = KeyboardActions(
                         // Handle done, next,... buttons on keyboard
-                        onNext = {
+                        onDone = {
                             if (nextButtonEnabled) {
-                                nextButtonEnabled = false
-                                //auth.createUserWithEmailAndPassword(email, "password")
+                                signInUser(email, passwordInputState.value.text)
                             }
                         }
                     ),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Next
-                    )
+                        imeAction = ImeAction.Done
+                    ),
+                    trailingIcon = {
+                        if (isErrorPasswordMessage) {
+                            Icon(
+                                Icons.Filled.Info,
+                                "error",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    leadingIcon = {
+                        val image = if (passwordVisible)
+                            Icons.Filled.Visibility
+                        else Icons.Filled.VisibilityOff
+
+                        // Please provide localized description for accessibility services
+                        val description =
+                            if (passwordVisible) "Hide password" else "Show password"
+
+                        IconButton(onClick = {
+                            passwordVisible = !passwordVisible
+                        }) {
+                            Icon(imageVector = image, description)
+                        }
+                    },
+                    supportingText = {
+                        if (isErrorPasswordMessage) {
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = errorPasswordMessage,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 )
 
                 DisposableEffect(Unit) {
@@ -953,7 +979,7 @@ fun LoginWithEmail(
                 }
 
                 Text(
-                    "Deine E-Mail-Adresse ist bei uns registriert.\nZeit zum Anmelden!",
+                    stringResource(id = R.string.loginWithEmail_text1),
                     modifier = Modifier.constrainAs(loginText2) {
                         top.linkTo(loginText1.bottom, 5.dp)
                         absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
@@ -964,7 +990,6 @@ fun LoginWithEmail(
 
                 Button(
                     onClick = {
-                        nextButtonEnabled = false
                         signInUser(email, passwordInputState.value.text)
                     },
                     enabled = nextButtonEnabled,
@@ -976,7 +1001,7 @@ fun LoginWithEmail(
                     }
                 ) {
                     Text(
-                        "Anmelden",
+                        stringResource(id = R.string.buttonText_login),
                         style = TextStyle(fontSize = 15.sp)
                     )
                 }
@@ -995,10 +1020,248 @@ fun LoginWithEmail(
                     }
                 ) {
                     Text(
-                        "Zurück",
+                        stringResource(id = R.string.buttonText_back),
                         style = TextStyle(fontSize = 15.sp)
                     )
                 }
+
+                Button(
+                    onClick = {
+                        navController.navigate("resetPassword")
+                    },
+                    enabled = backButtonEnabled,
+                    modifier = Modifier.constrainAs(forgotPassText) {
+                        absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                        absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
+                        top.linkTo(passwordInput.bottom, margin = 10.dp)
+                        width = Dimension.fillToConstraints
+                    }
+                ) {
+                    Text(
+                        stringResource(id = R.string.buttonText_resetPassword),
+                        style = TextStyle(fontSize = 15.sp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun ResetPassword(
+    navController: NavHostController
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        val context = LocalContext.current
+
+        ConstraintLayout() {
+            val (loginText1, loginText2, emailInput, nextButton, backButton) = createRefs()
+            val emailInputState = remember { mutableStateOf(TextFieldValue()) }
+            var errorEmailMessage: String by remember { mutableStateOf("An error occured") }
+            var isErrorEmailMessage by rememberSaveable { mutableStateOf(false) }
+            val focusRequester = FocusRequester()
+            val keyboardController = LocalSoftwareKeyboardController.current
+            val context = LocalContext.current
+            var nextButtonEnabled by remember { mutableStateOf(false) }
+            var backButtonEnabled by remember { mutableStateOf(true) }
+            val activity = (LocalContext.current as? Activity)
+            var emailInfoDialog = remember { mutableStateOf(false) }
+
+            fun sendLink(email: String) {
+                nextButtonEnabled = false
+                backButtonEnabled = false
+
+                auth.sendPasswordResetEmail(email)
+                    .addOnCompleteListener { task ->
+                        nextButtonEnabled = true
+                        backButtonEnabled = true
+                        if (task.isSuccessful) {
+                            emailInfoDialog.value = true
+                        } else {
+                            isErrorEmailMessage = true
+                            errorEmailMessage = task.exception?.localizedMessage.toString()
+                        }
+                    }
+            }
+
+            fun validateButton() {
+                nextButtonEnabled = !isErrorEmailMessage
+            }
+
+            fun validateEmail(text: String) {
+                if (!Patterns.EMAIL_ADDRESS.matcher(text).matches()) {
+                    isErrorEmailMessage = true
+                    errorEmailMessage = context.resources.getString(R.string.errorMessage_emailNotValid)
+                } else {
+                    isErrorEmailMessage = false
+                }
+
+                nextButtonEnabled = !isErrorEmailMessage
+            }
+
+            Text(
+                stringResource(id = R.string.resetPassword_title),
+                style = TextStyle(
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.ExtraBold
+                ),
+                modifier = Modifier.constrainAs(loginText1) {
+                    top.linkTo(parent.top, margin = 15.dp)
+                    absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                    absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
+                    width = Dimension.fillToConstraints
+                }
+            )
+
+            OutlinedTextField(
+                value = emailInputState.value,
+                onValueChange = {
+                    emailInputState.value = it
+                    validateEmail(emailInputState.value.text)
+                    validateButton()
+                },
+                isError = isErrorEmailMessage,
+                shape = RoundedCornerShape(15.dp),
+                modifier = Modifier
+                    .constrainAs(emailInput) {
+                        top.linkTo(loginText2.bottom, 15.dp)
+                        absoluteLeft.linkTo(parent.absoluteLeft, 15.dp)
+                        absoluteRight.linkTo(parent.absoluteRight, 15.dp)
+                        width = Dimension.fillToConstraints
+                    }
+                    .focusRequester(focusRequester)
+                    .onFocusChanged {
+                        if (it.isFocused) {
+                            keyboardController?.show()
+                        }
+                    },
+                label = { Text(stringResource(id = R.string.input_email)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    // Handle done, next,... buttons on keyboard
+                    onNext = {
+                        if (nextButtonEnabled) {
+                            sendLink(emailInputState.value.text)
+                        }
+                    }
+                ),
+                supportingText = {
+                    if (isErrorEmailMessage) {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = errorEmailMessage,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                trailingIcon = {
+                    if (isErrorEmailMessage) {
+                        Icon(Icons.Filled.Info, "error", tint = MaterialTheme.colorScheme.error)
+                    }
+                },
+            )
+
+            DisposableEffect(Unit) {
+                focusRequester.requestFocus()
+                onDispose { }
+            }
+
+            Text(
+                stringResource(id = R.string.resetPassword_text1),
+                modifier = Modifier.constrainAs(loginText2) {
+                    top.linkTo(loginText1.bottom, 5.dp)
+                    absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                    absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
+                    width = Dimension.fillToConstraints
+                }
+            )
+
+            Button(
+                onClick = {
+                    //signInUser(email, passwordInputState.value.text)
+                    sendLink(emailInputState.value.text)
+                },
+                enabled = nextButtonEnabled,
+                modifier = Modifier.constrainAs(nextButton) {
+                    absoluteLeft.linkTo(backButton.absoluteRight, margin = 15.dp)
+                    absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
+                    bottom.linkTo(parent.bottom, margin = 15.dp)
+                    width = Dimension.fillToConstraints
+                }
+            ) {
+                Text(
+                    stringResource(id = R.string.buttonText_sendLink),
+                    style = TextStyle(fontSize = 15.sp)
+                )
+            }
+
+            Button(
+                onClick = {
+                    nextButtonEnabled = false
+                    navController.popBackStack()
+                },
+                enabled = backButtonEnabled,
+                modifier = Modifier.constrainAs(backButton) {
+                    absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                    absoluteRight.linkTo(nextButton.absoluteLeft, margin = 15.dp)
+                    bottom.linkTo(parent.bottom, margin = 15.dp)
+                    width = Dimension.fillToConstraints
+                }
+            ) {
+                Text(
+                    stringResource(id = R.string.buttonText_back),
+                    style = TextStyle(fontSize = 15.sp)
+                )
+            }
+
+            if (emailInfoDialog.value) {
+                AlertDialog(
+                    onDismissRequest = {
+                        // Dismiss the dialog when the user clicks outside the dialog or on the back
+                        // button. If you want to disable that functionality, simply use an empty
+                        // onDismissRequest.
+                        //openDialog.value = false
+                    },
+                    icon = {
+                        Icon(
+                            Icons.Filled.Info,
+                            contentDescription = "Info icon"
+                        )
+                    },
+                    title = {
+                        Text(text = stringResource(id = R.string.resetPassword_resetDialogTitle))
+                    },
+                    text = {
+                        Text(
+                            text = stringResource(id = R.string.resetPassword_resetDialogText)
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                emailInfoDialog.value = false
+                                navController.navigate("loginWithEmail?email=${emailInputState.value.text}")
+                                //context.startActivity(Intent(context, Home::class.java))
+                                //activity?.finish()
+                            }
+                        ) {
+                            Text(stringResource(id = R.string.buttonText_gotIt))
+                        }
+                    },
+                    dismissButton = {
+                        // Nothing
+                    },
+                )
             }
         }
     }
@@ -1011,6 +1274,15 @@ fun EmailCheckPreview() {
     NucleusTheme {
         val navController = rememberNavController()
         EmailCheck(navController = navController)
+    }
+}
+
+@Preview
+@Composable
+fun ResetPasswordPreview() {
+    NucleusTheme {
+        val navController = rememberNavController()
+        ResetPassword(navController = navController)
     }
 }
 

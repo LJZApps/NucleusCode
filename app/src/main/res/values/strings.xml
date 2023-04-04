@@ -2,4 +2,35 @@
     <string name="app_name">Nucleus</string>
     <string name="ad_mob_banner_id" translatable="false">ca-app-pub-7761903540001790/6520210075</string>
     <string name="ad_mob_fluid_id" translatable="false">ca-app-pub-7761903540001790/6520210075</string>
+    <string name="errorMessage_emailNotValid">Invalid email address</string>
+    <string name="mailCheck_letsBegin">Let\'s begin…</string>
+    <string name="mailCheck_letsBegin2">We first check if your email address is already registered with us.</string>
+    <string name="input_email">E-mail</string>
+    <string name="buttonText_next">Next</string>
+    <string name="launcherWelcome_welcomeTextTitle">Welcome to Nucleus!</string>
+    <string name="launcherWelcome_welcomeText1">Our social media platform is designed to make you feel safe and comfortable while scrolling through posts and chatting with your friends.\nWe value privacy and individuality and offer a unique experience based on your interests and preferences, without sharing your data with third parties.</string>
+    <string name="buttonText_login">Login</string>
+    <string name="errorMessage_invalidPassword">Invalid password.</string>
+    <string name="errorMessage_passwordNotMatch">Passwords do not match.</string>
+    <string name="registerHome_title">Sign up</string>
+    <string name="registerHome_text1">This email address is not yet registered with us.\nLet\'s change it!</string>
+    <string name="input_password">Password</string>
+    <string name="input_confirmPassword">Confirm password</string>
+    <string name="buttonText_signUp">Sign up</string>
+    <string name="buttonText_back">Back</string>
+    <string name="registerHome_passwordDialogTitle">Password preferences</string>
+    <string name="buttonText_gotIt">Got it</string>
+    <string name="registerHome_passwordDialogText">- At leat 8 characters\n- At least on digit (0–9)\n- At least one lowercase letter (a-z)\n- At least one uppercase letter (A-Z)\n- At least one special character from the following character classes:\n!@#&amp;()-[]{}:;\',.?/*~$^+=</string>
+    <string name="registerHome_verifyEmailDialogTitle">Confirm your email address</string>
+    <string name="registerHome_verifyEmailDialogText">We have sent you a confirmation email.\nPlease confirm your email address to use this account.\nIf you do not see an email in your inbox, please check your spam folder.</string>
+    <string name="errorMessage_emailNotConfirmed">This email address has not been confirmed yet.</string>
+    <string name="errorMessage_passwordTooShort">Password must be at least 8 characters long.</string>
+    <string name="loginWithEmail_title">Login</string>
+    <string name="loginWithEmail_text1">Your email address is already registered with us.\nTime to log in!</string>
+    <string name="buttonText_resetPassword">Reset password</string>
+    <string name="resetPassword_title">Reset password</string>
+    <string name="resetPassword_text1">You have forgotten your password? No problem!\nJust enter your e-mail address and we will send you an e-mail with which you can re-enter your password.</string>
+    <string name="buttonText_sendLink">Send link</string>
+    <string name="resetPassword_resetDialogTitle">Email sent!</string>
+    <string name="resetPassword_resetDialogText">We have sent you an email to reset your password.\nIf you don\'t see an email in your inbox, please check your spam folder.</string>
 </resources>
