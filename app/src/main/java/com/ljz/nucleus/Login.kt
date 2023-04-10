@@ -1,6 +1,5 @@
 package com.ljz.nucleus
 
-import android.R.attr
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -22,9 +21,23 @@ import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.sharp.Help
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -39,7 +52,12 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.*
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,9 +68,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.google.android.gms.auth.api.credentials.Credential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.ljz.nucleus.database.UserDBHelper
 import com.ljz.nucleus.ui.theme.NucleusTheme
@@ -62,6 +82,7 @@ import java.util.regex.Pattern
 private lateinit var auth: FirebaseAuth
 private val PASSWORD_PATTERN: String =
     "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;.',?/*~$^+=]).{8,}$"
+private lateinit var realTDB: DatabaseReference
 
 class Login : ComponentActivity() {
 
@@ -70,6 +91,8 @@ class Login : ComponentActivity() {
 
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         auth = Firebase.auth
+        realTDB =
+            FirebaseDatabase.getInstance("https://nucleus-social-app-default-rtdb.europe-west1.firebasedatabase.app/").reference
 
         setContent {
             NucleusTheme {
@@ -762,8 +785,6 @@ fun RegisterHome(
                                     onClick = {
                                         emailInfoDialog.value = false
                                         navController.navigate("registerAccountInformation")
-                                        //context.startActivity(Intent(context, Home::class.java))
-                                        //activity?.finish()
                                     }
                                 ) {
                                     Text(stringResource(id = R.string.buttonText_gotIt))
@@ -797,12 +818,49 @@ fun RegisterAccount(
         val uid = auth.currentUser?.uid
 
         ConstraintLayout {
-            val (registerText1, registerText2, nextButton, backButton, usernameInput, nameInput) = createRefs()
-            var nextButtonEnabled by remember { mutableStateOf(false) }
+            val (registerText1, registerText2, nextButton, backButton, usernameInput, nameInput, infoInput) = createRefs()
+            var nextButtonEnabled by remember { mutableStateOf(true) }
             var backButtonEnabled by remember { mutableStateOf(true) }
             val usernameInputState = remember { mutableStateOf(TextFieldValue()) }
-            var errorUsernameMessage: String by remember { mutableStateOf("An error occured") }
+            var errorUsernameMessage: String by remember { mutableStateOf("Something went wrong") }
+            var isErrorUsername by rememberSaveable { mutableStateOf(false) }
+            val nameInputState = remember { mutableStateOf(TextFieldValue()) }
+            var errorNameMessage: String by remember { mutableStateOf("Something went wrong") }
             var isErrorName by rememberSaveable { mutableStateOf(false) }
+            val ageInputState = remember { mutableStateOf(TextFieldValue()) }
+            var errorAgeMessage: String by remember { mutableStateOf("Something went wrong") }
+            var isErrorAge by rememberSaveable { mutableStateOf(false) }
+            val firestoreDB = Firebase.firestore
+
+            fun validateInformation() {
+                //nextButtonEnabled = false
+                //backButtonEnabled = false
+                val usernameString = usernameInputState.value.text
+                val nameString = nameInputState.value.text
+                val ageString = ageInputState.value.text
+                val ageInt = ageInputState.value.text.toIntOrNull()
+                var isValid = false
+                isErrorUsername = false
+
+                // TODO add user to firestore
+
+                if (usernameString.isEmpty()) {
+                    isErrorUsername = true
+                    errorUsernameMessage = "Der Benutzername darf nicht leer sein"
+                } else {
+                    firestoreDB.collection("users").whereEqualTo("username", usernameString)
+                        .limit(1).get()
+                        .addOnSuccessListener {
+                            if (it.isEmpty) {
+                                isErrorUsername = true
+                                errorUsernameMessage = "Benutzername verfügbar"
+                            } else {
+                                isErrorUsername = true
+                                errorUsernameMessage = "Benutzername vergeben"
+                            }
+                        }
+                }
+            }
 
             Text(
                 "Profil-Informationen",
@@ -819,7 +877,7 @@ fun RegisterAccount(
             )
 
             Text(
-                "Einige Informationen müssen noch ausgefüllt werden, danach kannst du noch deine Interessen auswählen",
+                "Erzähl uns doch noch etwas über dich.",
                 modifier = Modifier.constrainAs(registerText2) {
                     top.linkTo(registerText1.bottom, 5.dp)
                     absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
@@ -832,12 +890,11 @@ fun RegisterAccount(
                 value = usernameInputState.value,
                 onValueChange = {
                     usernameInputState.value = it
-
                 },
-                isError = isErrorName,
+                isError = isErrorUsername,
                 shape = RoundedCornerShape(15.dp),
                 modifier = Modifier
-                    .constrainAs(nameInput) {
+                    .constrainAs(usernameInput) {
                         top.linkTo(registerText2.bottom, 15.dp)
                         absoluteLeft.linkTo(parent.absoluteLeft, 15.dp)
                         absoluteRight.linkTo(parent.absoluteRight, 15.dp)
@@ -858,10 +915,18 @@ fun RegisterAccount(
                     }
                 ),
                 supportingText = {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "Unter diesem Benutzernamen kann man dich finden."
-                    )
+                    if (isErrorUsername) {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = errorUsernameMessage,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    } else {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = "Unter diesem Benutzernamen kann man dich finden."
+                        )
+                    }
                 },
                 trailingIcon = {
                     if (isErrorName) {
@@ -870,8 +935,112 @@ fun RegisterAccount(
                 },
             )
 
+            OutlinedTextField(
+                value = nameInputState.value,
+                onValueChange = {
+                    nameInputState.value = it
+
+                },
+                isError = isErrorName,
+                shape = RoundedCornerShape(15.dp),
+                modifier = Modifier
+                    .constrainAs(nameInput) {
+                        top.linkTo(usernameInput.bottom, 10.dp)
+                        absoluteLeft.linkTo(parent.absoluteLeft, 15.dp)
+                        absoluteRight.linkTo(parent.absoluteRight, 15.dp)
+                        width = Dimension.fillToConstraints
+                    },
+                label = { Text("Name") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    // Handle done, next,... buttons on keyboard
+                    onNext = {
+                        if (nextButtonEnabled) {
+                            // TODO send informations to server
+                        }
+                    }
+                ),
+                supportingText = {
+                    if (isErrorName) {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = errorNameMessage,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                trailingIcon = {
+                    if (isErrorName) {
+                        Icon(Icons.Filled.Info, "error", tint = MaterialTheme.colorScheme.error)
+                    }
+                },
+            )
+
+            OutlinedTextField(
+                value = ageInputState.value,
+                onValueChange = {
+                    isErrorAge = false
+                    ageInputState.value
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(15.dp),
+                modifier = Modifier
+                    .constrainAs(infoInput) {
+                        top.linkTo(nameInput.bottom, 10.dp)
+                        absoluteLeft.linkTo(parent.absoluteLeft, 15.dp)
+                        absoluteRight.linkTo(parent.absoluteRight, 15.dp)
+                        width = Dimension.fillToConstraints
+                    },
+                label = { Text("Alter") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    // Handle done, next,... buttons on keyboard
+                    onNext = {
+                        if (nextButtonEnabled) {
+                            // TODO send informations to server
+                        }
+                    }
+                ),
+                isError = isErrorAge,
+                supportingText = {
+                    if (isErrorAge) {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = errorAgeMessage,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    } else {
+                        if (ageInputState.value.text.isNotEmpty()) {
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = "${ageInputState.value.text.length}/3",
+                                textAlign = TextAlign.End
+                            )
+                        } else {
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = "Dein Alter wird zur personalisierung deines Feeds verwendet."
+                            )
+                        }
+                    }
+                },
+                trailingIcon = {
+                    if (isErrorAge) {
+                        Icon(Icons.Filled.Info, "error", tint = MaterialTheme.colorScheme.error)
+                    }
+                },
+            )
+
             Button(
                 onClick = {
+                    validateInformation()
                     // TODO navigate to interest-chooser (extra activity)
                 },
                 enabled = nextButtonEnabled,

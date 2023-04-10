@@ -22,7 +22,7 @@ import com.google.firebase.ktx.Firebase
 import com.ljz.nucleus.ui.theme.NucleusTheme
 
 private lateinit var auth: FirebaseAuth
-var database: DatabaseReference? = null
+private lateinit var database: DatabaseReference
 
 class Home : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,7 +33,7 @@ class Home : ComponentActivity() {
         val uid = auth.currentUser?.uid
 
         val userData = UserData("Leon Zapke", "Ja was weiß ich", "Fick dick")
-        database!!.child("user/$uid").setValue(userData)
+        database.child("user/$uid").setValue(userData)
             .addOnSuccessListener {
                 Toast.makeText(
                     this,
