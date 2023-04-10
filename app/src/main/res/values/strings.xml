@@ -22,7 +22,7 @@
     <string name="buttonText_gotIt">Got it</string>
     <string name="registerHome_passwordDialogText">- At leat 8 characters\n- At least on digit (0–9)\n- At least one lowercase letter (a-z)\n- At least one uppercase letter (A-Z)\n- At least one special character from the following character classes:\n!@#&amp;()-[]{}:;\',.?/*~$^+=</string>
     <string name="registerHome_verifyEmailDialogTitle">Confirm your email address</string>
-    <string name="registerHome_verifyEmailDialogText">We have sent you a confirmation email.\nPlease confirm your email address to use this account.\nIf you do not see an email in your inbox, please check your spam folder.</string>
+    <string name="registerHome_verifyEmailDialogText">We have sent you a confirmation email.\nPlease confirm your email address to use this account.\nIf you do not see an email in your inbox, please check your spam folder.\n\nIf the email address you entered is incorrect, you can change it in the settings.</string>
     <string name="errorMessage_emailNotConfirmed">This email address has not been confirmed yet.</string>
     <string name="errorMessage_passwordTooShort">Password must be at least 8 characters long.</string>
     <string name="loginWithEmail_title">Login</string>

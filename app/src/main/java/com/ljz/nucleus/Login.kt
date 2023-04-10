@@ -1,5 +1,6 @@
 package com.ljz.nucleus
 
+import android.R.attr
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -49,6 +50,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.android.gms.auth.api.credentials.Credential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -146,12 +148,14 @@ fun RegisterNavHost(
     }
 }
 
-
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun EmailCheck(
     navController: NavHostController
 ) {
+    // TODO remove this line
+    navController.navigate("registerAccountInformation")
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -380,7 +384,8 @@ fun RegisterHome(
                             isErrorFirstPassword = false
                         } else {
                             isErrorFirstPassword = true
-                            errorMessageFirstPassword = context.resources.getString(R.string.errorMessage_invalidPassword)
+                            errorMessageFirstPassword =
+                                context.resources.getString(R.string.errorMessage_invalidPassword)
                         }
                     }
 
@@ -389,7 +394,8 @@ fun RegisterHome(
                             isErrorConfirmPassword = false
                         } else {
                             isErrorConfirmPassword = true
-                            errorMessageConfirmPassword = context.resources.getString(R.string.errorMessage_passwordNotMatch)
+                            errorMessageConfirmPassword =
+                                context.resources.getString(R.string.errorMessage_passwordNotMatch)
                         }
                     }
 
@@ -774,6 +780,7 @@ fun RegisterHome(
     }
 }
 
+// TODO
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterAccount(
@@ -785,7 +792,121 @@ fun RegisterAccount(
             .fillMaxHeight()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        auth.currentUser?.uid?.let { Text(text = it) }
+        val context = LocalContext.current
+        val email = auth.currentUser?.email
+        val uid = auth.currentUser?.uid
+
+        ConstraintLayout {
+            val (registerText1, registerText2, nextButton, backButton, usernameInput, nameInput) = createRefs()
+            var nextButtonEnabled by remember { mutableStateOf(false) }
+            var backButtonEnabled by remember { mutableStateOf(true) }
+            val usernameInputState = remember { mutableStateOf(TextFieldValue()) }
+            var errorUsernameMessage: String by remember { mutableStateOf("An error occured") }
+            var isErrorName by rememberSaveable { mutableStateOf(false) }
+
+            Text(
+                "Profil-Informationen",
+                style = TextStyle(
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.ExtraBold
+                ),
+                modifier = Modifier.constrainAs(registerText1) {
+                    top.linkTo(parent.top, margin = 15.dp)
+                    absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                    absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
+                    width = Dimension.fillToConstraints
+                }
+            )
+
+            Text(
+                "Einige Informationen müssen noch ausgefüllt werden, danach kannst du noch deine Interessen auswählen",
+                modifier = Modifier.constrainAs(registerText2) {
+                    top.linkTo(registerText1.bottom, 5.dp)
+                    absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                    absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
+                    width = Dimension.fillToConstraints
+                }
+            )
+
+            OutlinedTextField(
+                value = usernameInputState.value,
+                onValueChange = {
+                    usernameInputState.value = it
+
+                },
+                isError = isErrorName,
+                shape = RoundedCornerShape(15.dp),
+                modifier = Modifier
+                    .constrainAs(nameInput) {
+                        top.linkTo(registerText2.bottom, 15.dp)
+                        absoluteLeft.linkTo(parent.absoluteLeft, 15.dp)
+                        absoluteRight.linkTo(parent.absoluteRight, 15.dp)
+                        width = Dimension.fillToConstraints
+                    },
+                label = { Text("Benutzername") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    // Handle done, next,... buttons on keyboard
+                    onNext = {
+                        if (nextButtonEnabled) {
+                            // TODO send informations to server
+                        }
+                    }
+                ),
+                supportingText = {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Unter diesem Benutzernamen kann man dich finden."
+                    )
+                },
+                trailingIcon = {
+                    if (isErrorName) {
+                        Icon(Icons.Filled.Info, "error", tint = MaterialTheme.colorScheme.error)
+                    }
+                },
+            )
+
+            Button(
+                onClick = {
+                    // TODO navigate to interest-chooser (extra activity)
+                },
+                enabled = nextButtonEnabled,
+                modifier = Modifier.constrainAs(nextButton) {
+                    absoluteLeft.linkTo(backButton.absoluteRight, margin = 15.dp)
+                    absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
+                    bottom.linkTo(parent.bottom, margin = 15.dp)
+                    width = Dimension.fillToConstraints
+                }
+            ) {
+                Text(
+                    "Weiter",
+                    style = TextStyle(fontSize = 15.sp)
+                )
+            }
+
+            Button(
+                onClick = {
+                    nextButtonEnabled = false
+                    navController.popBackStack()
+                },
+                enabled = backButtonEnabled,
+                modifier = Modifier.constrainAs(backButton) {
+                    absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                    absoluteRight.linkTo(nextButton.absoluteLeft, margin = 15.dp)
+                    bottom.linkTo(parent.bottom, margin = 15.dp)
+                    width = Dimension.fillToConstraints
+                }
+            ) {
+                Text(
+                    stringResource(id = R.string.buttonText_back),
+                    style = TextStyle(fontSize = 15.sp)
+                )
+            }
+        }
     }
 }
 
@@ -838,7 +959,8 @@ fun LoginWithEmail(
                                     activity?.finish()
                                 } else {
                                     isErrorPasswordMessage = true
-                                    errorPasswordMessage = context.resources.getString(R.string.errorMessage_emailNotConfirmed)
+                                    errorPasswordMessage =
+                                        context.resources.getString(R.string.errorMessage_emailNotConfirmed)
                                 }
                             } else {
                                 // If sign in fails, display a message to the user.
@@ -855,7 +977,8 @@ fun LoginWithEmail(
                 fun validateFirstPassword(password: String) {
                     if (password.length < 8) {
                         isErrorPasswordMessage = true
-                        errorPasswordMessage = context.resources.getString(R.string.errorMessage_passwordTooShort)
+                        errorPasswordMessage =
+                            context.resources.getString(R.string.errorMessage_passwordTooShort)
                     } else {
                         isErrorPasswordMessage = false
                     }
@@ -1067,11 +1190,10 @@ fun ResetPassword(
             var isErrorEmailMessage by rememberSaveable { mutableStateOf(false) }
             val focusRequester = FocusRequester()
             val keyboardController = LocalSoftwareKeyboardController.current
-            val context = LocalContext.current
             var nextButtonEnabled by remember { mutableStateOf(false) }
             var backButtonEnabled by remember { mutableStateOf(true) }
             val activity = (LocalContext.current as? Activity)
-            var emailInfoDialog = remember { mutableStateOf(false) }
+            val emailInfoDialog = remember { mutableStateOf(false) }
 
             fun sendLink(email: String) {
                 nextButtonEnabled = false
@@ -1097,7 +1219,8 @@ fun ResetPassword(
             fun validateEmail(text: String) {
                 if (!Patterns.EMAIL_ADDRESS.matcher(text).matches()) {
                     isErrorEmailMessage = true
-                    errorEmailMessage = context.resources.getString(R.string.errorMessage_emailNotValid)
+                    errorEmailMessage =
+                        context.resources.getString(R.string.errorMessage_emailNotValid)
                 } else {
                     isErrorEmailMessage = false
                 }
@@ -1267,7 +1390,18 @@ fun ResetPassword(
     }
 }
 
+@Preview
+@Composable
+fun RegisterAccountInformationPreview() {
+    NucleusTheme {
+        val navController = rememberNavController()
+        RegisterAccount(
+            navController = navController
+        )
+    }
+}
 
+/*
 @Preview
 @Composable
 fun EmailCheckPreview() {
@@ -1310,3 +1444,4 @@ fun RegisterWithEmailPreview() {
         )
     }
 }
+ */

@@ -21,7 +21,7 @@
     <string name="buttonText_gotIt">Verstanden</string>
     <string name="registerHome_passwordDialogText">- Mindestens 8 Zeichen\n- Mindestens eine Ziffer (0–9)\n- Mindestens einen Kleinbuchstaben (a-z)\n- Mindestens einen Großbuchstaben (A-Z)\n- Mindestens ein Sonderzeichen aus folgenden Zeichenklassen:\n!@#&amp;()-[]{}:;\',.?/*~$^+=</string>
     <string name="registerHome_verifyEmailDialogTitle">Bestätige deine E-Mail-Adresse</string>
-    <string name="registerHome_verifyEmailDialogText">Wir haben dir eine Bestätigungs-Email geschickt. \nBitte bestätige deine E-Mail-Adresse um diesen Account nutzen zu können.\nWenn du keine Email in deinem Postfach sehen kannst, schau bitte in deinem Spam-Ordner nach.</string>
+    <string name="registerHome_verifyEmailDialogText">Wir haben dir eine Bestätigungs-Email geschickt.  Bitte bestätige deine E-Mail-Adresse um diesen Account nutzen zu können. Wenn du keine Email in deinem Postfach sehen kannst, schau bitte in deinem Spam-Ordner nach.  Wenn eine inkorrekte E-Mail-Adresse eingegeben hast, kannst du deine E-Mail-Adresse in den Einstellungen ändern.</string>
     <string name="errorMessage_emailNotConfirmed">Diese E-Mail-Adresse wurde noch nicht bestätigt.</string>
     <string name="errorMessage_passwordTooShort">Passwort muss mindestens 8 Zeichen lang sein.</string>
     <string name="loginWithEmail_title">Anmelden</string>

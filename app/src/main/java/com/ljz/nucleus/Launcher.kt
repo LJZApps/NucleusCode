@@ -48,6 +48,11 @@ class Launcher : ComponentActivity() {
         val user = auth.currentUser
         val userDB = UserDBHelper(this, null)
 
+        // TODO remove this intent
+        startActivity(Intent(this, Login::class.java))
+        finish()
+
+        /*
         if (user != null) {
             startActivity(Intent(this, Home::class.java))
             finish()
@@ -60,6 +65,7 @@ class Launcher : ComponentActivity() {
         }
 
         askNotificationPermission()
+         */
     }
 
     // Declare the launcher at the top of your Activity/Fragment:
