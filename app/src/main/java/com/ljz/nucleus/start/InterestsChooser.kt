@@ -23,8 +23,11 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -33,16 +36,24 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -91,9 +102,10 @@ fun InterestChooserMain() {
     ) {
         val context = LocalContext.current
         ConstraintLayout {
-            val (interestChooserTitle, interestChooserText, nextButton, skipButton, interestLayout) = createRefs()
+            val (interestChooserTitle, interestChooserText, nextButton, skipButton, interestLayout, searchInput) = createRefs()
             val activity = (LocalContext.current as? Activity)
             val interests = remember { mutableStateListOf<Interest>() }
+            val searchInputState = remember { mutableStateOf(TextFieldValue()) }
 
             realTDB.child("interests").addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -109,7 +121,7 @@ fun InterestChooserMain() {
             })
 
             Text(
-                "Interessen auswählen",
+                stringResource(id = R.string.interestChooserMain_title),
                 style = TextStyle(
                     textAlign = TextAlign.Left,
                     fontSize = 25.sp,
@@ -125,7 +137,7 @@ fun InterestChooserMain() {
             )
 
             Text(
-                "In diesem Schritt kannst du deine Interessen auswählen, womit dein Home-Feed besser auf dich zugeschnitten werden kann.",
+                stringResource(id = R.string.interestChooserMain_text1),
                 style = TextStyle(
                     fontSize = 18.sp
                 ),
@@ -138,17 +150,77 @@ fun InterestChooserMain() {
                 }
             )
 
+            TextField(
+                value = searchInputState.value,
+                onValueChange = {
+                    //isErrorUsername = false
+                    searchInputState.value = it
+                },
+                //isError = isErrorUsername,
+                shape = RoundedCornerShape(15.dp),
+                modifier = Modifier
+                    .constrainAs(searchInput) {
+                        top.linkTo(interestChooserText.bottom, 15.dp)
+                        absoluteLeft.linkTo(parent.absoluteLeft, 15.dp)
+                        absoluteRight.linkTo(parent.absoluteRight, 15.dp)
+                        width = Dimension.fillToConstraints
+                    },
+                colors = TextFieldDefaults.textFieldColors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent
+                ),
+                label = { Text(stringResource(id = R.string.input_search)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    // Handle done, next,... buttons on keyboard
+                    onNext = {
+                        /*if (nextButtonEnabled) {
+                            // TODO send informations to server
+                        }
+                         */
+                    }
+                ),
+                /*
+                supportingText = {
+                    if (isErrorUsername) {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = errorUsernameMessage,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    } else {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = "Unter diesem Benutzernamen kann man dich finden."
+                        )
+                    }
+                },
+                trailingIcon = {
+                    if (isErrorName) {
+                        Icon(Icons.Filled.Info, "error", tint = MaterialTheme.colorScheme.error)
+                    }
+                },
+                 */
+            )
+
             val state = rememberScrollState(initial = 0)
 
             FlowRow(
-                modifier = Modifier.constrainAs(interestLayout) {
-                    top.linkTo(interestChooserText.bottom, 10.dp)
-                    absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
-                    absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
-                    bottom.linkTo(nextButton.top, 10.dp)
-                    width = Dimension.fillToConstraints
-                    height = Dimension.fillToConstraints
-                }.verticalScroll(state)
+                modifier = Modifier
+                    .constrainAs(interestLayout) {
+                        top.linkTo(searchInput.bottom, 10.dp)
+                        absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
+                        absoluteRight.linkTo(parent.absoluteRight, margin = 15.dp)
+                        bottom.linkTo(nextButton.top, 10.dp)
+                        width = Dimension.fillToConstraints
+                        height = Dimension.fillToConstraints
+                    }
+                    .verticalScroll(state)
             ) {
                 interests.forEach { interest ->
                     InputChip(

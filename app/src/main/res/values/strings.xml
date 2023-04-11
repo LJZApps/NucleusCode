@@ -34,4 +34,7 @@
     <string name="resetPassword_resetDialogTitle">Email sent!</string>
     <string name="resetPassword_resetDialogText">We have sent you an email to reset your password.\nIf you don\'t see an email in your inbox, please check your spam folder.</string>
     <string name="buttonText_skip">Skip</string>
+    <string name="input_search">Search</string>
+    <string name="interestChooserMain_title">Choose interests</string>
+    <string name="interestChooserMain_text1">In this step, you can select your interests, which will allow your home feed to be better personalized to you.</string>
 </resources>

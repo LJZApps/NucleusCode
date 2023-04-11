@@ -33,4 +33,7 @@
     <string name="resetPassword_resetDialogText">Wir haben dir eine E-Mail zum zurücksetzen deines Passwortes geschickt.\nWenn du keine Email in deinem Postfach sehen kannst, schau bitte in deinem Spam-Ordner nach.</string>
     <string name="resetPassword_resetDialogTitle">E-Mail gesendet!</string>
     <string name="buttonText_skip">Überspringen</string>
+    <string name="input_search">Suche</string>
+    <string name="interestChooserMain_title">Interessen auswählen</string>
+    <string name="interestChooserMain_text1">In diesem Schritt kannst du deine Interessen auswählen, womit dein Home-Feed besser auf dich zugeschnitten werden kann.</string>
 </resources>
