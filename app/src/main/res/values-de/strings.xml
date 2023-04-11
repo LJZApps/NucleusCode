@@ -32,4 +32,5 @@
     <string name="buttonText_sendLink">Link senden</string>
     <string name="resetPassword_resetDialogText">Wir haben dir eine E-Mail zum zurücksetzen deines Passwortes geschickt.\nWenn du keine Email in deinem Postfach sehen kannst, schau bitte in deinem Spam-Ordner nach.</string>
     <string name="resetPassword_resetDialogTitle">E-Mail gesendet!</string>
+    <string name="buttonText_skip">Überspringen</string>
 </resources>

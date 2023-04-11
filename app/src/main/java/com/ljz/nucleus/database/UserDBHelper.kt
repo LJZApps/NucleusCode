@@ -12,7 +12,7 @@ class UserDBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
     SQLiteOpenHelper(context, DATABASE_NAME, factory, DATABASE_VERSION) {
 
     override fun onCreate(db: SQLiteDatabase?) {
-        if (!tableExists("UserData", db)) {
+        if (!tableExists("Interest", db)) {
             createUserDataTable(db)
         }
     }
@@ -20,14 +20,14 @@ class UserDBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
     fun deleteUser(uid: String) {
         val db = this.writableDatabase
 
-        db.execSQL("DELETE FROM UserData WHERE uid='$uid'")
+        db.execSQL("DELETE FROM Interest WHERE uid='$uid'")
         db.close()
     }
 
     fun removeUserPassword(uid: String) {
         val db = this.writableDatabase
 
-        db.execSQL("UPDATE 'UserData' SET 'password' = NULL WHERE 'uid' = '$uid'")
+        db.execSQL("UPDATE 'Interest' SET 'password' = NULL WHERE 'uid' = '$uid'")
 
         db.close()
     }
@@ -35,7 +35,7 @@ class UserDBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
     fun addUser(uid: String, password: String, email: String) {
         val db = this.writableDatabase
 
-        db.execSQL("INSERT INTO UserData (uid, email, password) VALUES ('$uid', '$email', '$password')")
+        db.execSQL("INSERT INTO Interest (uid, email, password) VALUES ('$uid', '$email', '$password')")
 
         db.close()
     }
@@ -43,7 +43,7 @@ class UserDBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
     fun finishRegister(uid: String) {
         val db = this.writableDatabase
 
-        db.execSQL("UPDATE 'UserData' SET 'register_finished' = 1 WHERE 'uid' = '$uid'")
+        db.execSQL("UPDATE 'Interest' SET 'register_finished' = 1 WHERE 'uid' = '$uid'")
 
         db.close()
     }
@@ -51,8 +51,8 @@ class UserDBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
     fun getPassword(uid: String): String {
         val db = this.readableDatabase
         val returnValue: String
-        if (tableExists("UserData", db)) {
-            val query = "SELECT password FROM UserData WHERE uid='$uid'"
+        if (tableExists("Interest", db)) {
+            val query = "SELECT password FROM Interest WHERE uid='$uid'"
             val cursor: Cursor = db.rawQuery(query, null)
             returnValue = if (cursor.moveToFirst()) {
                 cursor.getString(0)
@@ -101,8 +101,8 @@ class UserDBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
     fun isRegisterFinished(uid: String): Boolean {
         val db = this.readableDatabase
         var returnValue = false
-        if (tableExists("UserData", db)) {
-            var query = "SELECT * FROM UserData WHERE register_finished='1' AND uid='$uid'"
+        if (tableExists("Interest", db)) {
+            var query = "SELECT * FROM Interest WHERE register_finished='1' AND uid='$uid'"
             val cursor: Cursor = db.rawQuery(query, null)
             returnValue = cursor.count > 0
         } else {
@@ -115,7 +115,7 @@ class UserDBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
     }
 
     private fun createUserDataTable(db: SQLiteDatabase?) {
-        db?.execSQL("CREATE TABLE 'UserData' ('uid' VARCHAR PRIMARY KEY, 'email' VARCHAR, 'password' VARCHAR, 'register_finished' NUMERIC(1))")
+        db?.execSQL("CREATE TABLE 'Interest' ('uid' VARCHAR PRIMARY KEY, 'email' VARCHAR, 'password' VARCHAR, 'register_finished' NUMERIC(1))")
 
         //db.close()
     }

@@ -33,4 +33,5 @@
     <string name="buttonText_sendLink">Send link</string>
     <string name="resetPassword_resetDialogTitle">Email sent!</string>
     <string name="resetPassword_resetDialogText">We have sent you an email to reset your password.\nIf you don\'t see an email in your inbox, please check your spam folder.</string>
+    <string name="buttonText_skip">Skip</string>
 </resources>

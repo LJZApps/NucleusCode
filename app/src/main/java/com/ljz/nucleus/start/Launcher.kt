@@ -50,7 +50,7 @@ class Launcher : ComponentActivity() {
         val userDB = UserDBHelper(this, null)
 
         // TODO remove this intent
-        startActivity(Intent(this, Login::class.java))
+        startActivity(Intent(this, InterestsChooser::class.java))
         finish()
 
         /*
