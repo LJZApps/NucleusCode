@@ -1,4 +1,4 @@
-package com.ljz.nucleus
+package com.ljz.nucleus.start
 
 import android.Manifest
 import android.app.Activity
@@ -35,6 +35,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
+import com.ljz.nucleus.R
 import com.ljz.nucleus.database.UserDBHelper
 import com.ljz.nucleus.ui.theme.NucleusTheme
 

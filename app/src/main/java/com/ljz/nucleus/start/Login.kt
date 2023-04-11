@@ -1,4 +1,4 @@
-package com.ljz.nucleus
+package com.ljz.nucleus.start
 
 import android.app.Activity
 import android.content.Intent
@@ -76,6 +76,8 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.get
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
+import com.ljz.nucleus.Home
+import com.ljz.nucleus.R
 import com.ljz.nucleus.database.UserDBHelper
 import com.ljz.nucleus.ui.theme.NucleusTheme
 import java.util.regex.Pattern
@@ -879,7 +881,8 @@ fun RegisterAccount(
                                         val userSettings: MutableMap<String, Any> = HashMap()
                                         userSettings["admin"] = false
                                         userSettings["banned"] = false
-                                        userSettings["loginVersion"] = remoteConfig.getLong("login_version")
+                                        // TODO change in production to login_version_stable
+                                        userSettings["loginVersion"] = remoteConfig.getLong("login_version_dev")
 
                                         val user = hashMapOf(
                                             "username" to usernameString,
@@ -892,9 +895,10 @@ fun RegisterAccount(
                                                 .set(user)
                                                 .addOnCompleteListener{task ->
                                                     if (task.isSuccessful) {
-                                                        Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show()
+                                                        // TODO navigate to interests-chooser
                                                     } else {
-                                                        Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show()
+                                                        isErrorName = true
+                                                        errorNameMessage = task.exception?.message.toString()
                                                     }
                                                 }
                                         } else {
