@@ -57,7 +57,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -74,6 +73,9 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ktx.get
+import com.google.firebase.remoteconfig.ktx.remoteConfig
+import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.ljz.nucleus.database.UserDBHelper
 import com.ljz.nucleus.ui.theme.NucleusTheme
 import java.util.regex.Pattern
@@ -177,7 +179,7 @@ fun EmailCheck(
     navController: NavHostController
 ) {
     // TODO remove this line
-    navController.navigate("registerAccountInformation")
+    //navController.navigate("registerAccountInformation")
 
     Surface(
         modifier = Modifier
@@ -814,11 +816,12 @@ fun RegisterAccount(
             .background(MaterialTheme.colorScheme.background)
     ) {
         val context = LocalContext.current
+        val activity = (LocalContext.current as? Activity)
         val email = auth.currentUser?.email
         val uid = auth.currentUser?.uid
 
         ConstraintLayout {
-            val (registerText1, registerText2, nextButton, backButton, usernameInput, nameInput, infoInput) = createRefs()
+            val (registerText1, registerText2, nextButton, backButton, usernameInput, nameInput) = createRefs()
             var nextButtonEnabled by remember { mutableStateOf(true) }
             var backButtonEnabled by remember { mutableStateOf(true) }
             val usernameInputState = remember { mutableStateOf(TextFieldValue()) }
@@ -827,36 +830,81 @@ fun RegisterAccount(
             val nameInputState = remember { mutableStateOf(TextFieldValue()) }
             var errorNameMessage: String by remember { mutableStateOf("Something went wrong") }
             var isErrorName by rememberSaveable { mutableStateOf(false) }
-            val ageInputState = remember { mutableStateOf(TextFieldValue()) }
-            var errorAgeMessage: String by remember { mutableStateOf("Something went wrong") }
-            var isErrorAge by rememberSaveable { mutableStateOf(false) }
             val firestoreDB = Firebase.firestore
+            val remoteConfig = Firebase.remoteConfig
+            val configSettings = remoteConfigSettings {
+                minimumFetchIntervalInSeconds = 3600
+            }
+            remoteConfig.setConfigSettingsAsync(configSettings)
 
             fun validateInformation() {
-                //nextButtonEnabled = false
-                //backButtonEnabled = false
+                nextButtonEnabled = false
+                backButtonEnabled = false
                 val usernameString = usernameInputState.value.text
                 val nameString = nameInputState.value.text
-                val ageString = ageInputState.value.text
-                val ageInt = ageInputState.value.text.toIntOrNull()
-                var isValid = false
+                var isValid = true
                 isErrorUsername = false
+                isErrorName = false
 
-                // TODO add user to firestore
+                if (nameString.isEmpty()) {
+                    isValid = false
+                    isErrorName = true
+                    errorNameMessage = "Der Name darf nicht leer sein"
+                }
 
                 if (usernameString.isEmpty()) {
+                    isValid = false
                     isErrorUsername = true
                     errorUsernameMessage = "Der Benutzername darf nicht leer sein"
+                    nextButtonEnabled = true
+                    backButtonEnabled = true
                 } else {
-                    firestoreDB.collection("users").whereEqualTo("username", usernameString)
-                        .limit(1).get()
+                    firestoreDB.collection("user").whereEqualTo("username", usernameString)
+                        .get()
                         .addOnSuccessListener {
-                            if (it.isEmpty) {
-                                isErrorUsername = true
-                                errorUsernameMessage = "Benutzername verfügbar"
-                            } else {
+                            if (!it.isEmpty) {
+                                isValid = false
                                 isErrorUsername = true
                                 errorUsernameMessage = "Benutzername vergeben"
+                            }
+
+                            if (isValid) {
+                                remoteConfig.fetchAndActivate()
+                                    .addOnCompleteListener {
+                                        val userInformation: MutableMap<String, Any> = HashMap()
+                                        userInformation["name"] = nameString
+                                        userInformation["bio"] = ""
+                                        userInformation["age"] = 0
+
+                                        val userSettings: MutableMap<String, Any> = HashMap()
+                                        userSettings["admin"] = false
+                                        userSettings["banned"] = false
+                                        userSettings["loginVersion"] = remoteConfig.getLong("login_version")
+
+                                        val user = hashMapOf(
+                                            "username" to usernameString,
+                                            "user_informations" to userInformation,
+                                            "user_settings" to userSettings
+                                        )
+
+                                        if (uid != null) {
+                                            firestoreDB.collection("user").document(uid)
+                                                .set(user)
+                                                .addOnCompleteListener{task ->
+                                                    if (task.isSuccessful) {
+                                                        Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show()
+                                                    } else {
+                                                        Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                }
+                                        } else {
+                                            isErrorUsername = true
+                                            errorUsernameMessage = "Failed to get uid"
+                                        }
+                                    }
+                            } else {
+                                nextButtonEnabled = true
+                                backButtonEnabled = true
                             }
                         }
                 }
@@ -877,7 +925,7 @@ fun RegisterAccount(
             )
 
             Text(
-                "Erzähl uns doch noch etwas über dich.",
+                "Gebe noch deinen Benutzernamen und richtigen Namen ein, um die Registrierung abzuschließen.",
                 modifier = Modifier.constrainAs(registerText2) {
                     top.linkTo(registerText1.bottom, 5.dp)
                     absoluteLeft.linkTo(parent.absoluteLeft, margin = 15.dp)
@@ -889,6 +937,7 @@ fun RegisterAccount(
             OutlinedTextField(
                 value = usernameInputState.value,
                 onValueChange = {
+                    isErrorUsername = false
                     usernameInputState.value = it
                 },
                 isError = isErrorUsername,
@@ -938,8 +987,8 @@ fun RegisterAccount(
             OutlinedTextField(
                 value = nameInputState.value,
                 onValueChange = {
+                    isErrorName = false
                     nameInputState.value = it
-
                 },
                 isError = isErrorName,
                 shape = RoundedCornerShape(15.dp),
@@ -975,64 +1024,6 @@ fun RegisterAccount(
                 },
                 trailingIcon = {
                     if (isErrorName) {
-                        Icon(Icons.Filled.Info, "error", tint = MaterialTheme.colorScheme.error)
-                    }
-                },
-            )
-
-            OutlinedTextField(
-                value = ageInputState.value,
-                onValueChange = {
-                    isErrorAge = false
-                    ageInputState.value
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(15.dp),
-                modifier = Modifier
-                    .constrainAs(infoInput) {
-                        top.linkTo(nameInput.bottom, 10.dp)
-                        absoluteLeft.linkTo(parent.absoluteLeft, 15.dp)
-                        absoluteRight.linkTo(parent.absoluteRight, 15.dp)
-                        width = Dimension.fillToConstraints
-                    },
-                label = { Text("Alter") },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    // Handle done, next,... buttons on keyboard
-                    onNext = {
-                        if (nextButtonEnabled) {
-                            // TODO send informations to server
-                        }
-                    }
-                ),
-                isError = isErrorAge,
-                supportingText = {
-                    if (isErrorAge) {
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = errorAgeMessage,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    } else {
-                        if (ageInputState.value.text.isNotEmpty()) {
-                            Text(
-                                modifier = Modifier.fillMaxWidth(),
-                                text = "${ageInputState.value.text.length}/3",
-                                textAlign = TextAlign.End
-                            )
-                        } else {
-                            Text(
-                                modifier = Modifier.fillMaxWidth(),
-                                text = "Dein Alter wird zur personalisierung deines Feeds verwendet."
-                            )
-                        }
-                    }
-                },
-                trailingIcon = {
-                    if (isErrorAge) {
                         Icon(Icons.Filled.Info, "error", tint = MaterialTheme.colorScheme.error)
                     }
                 },
