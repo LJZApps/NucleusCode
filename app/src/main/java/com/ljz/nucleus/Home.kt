@@ -32,7 +32,7 @@ class Home : ComponentActivity() {
         database = FirebaseDatabase.getInstance("https://nucleus-social-app-default-rtdb.europe-west1.firebasedatabase.app/").reference
         val uid = auth.currentUser?.uid
 
-        val userData = UserData("Leon Zapke", "Ja was weiß ich", "Fick dick")
+        val userData = UserData("Leon Zapke", "Ja was weiß ich", "Test")
         database.child("user/$uid").setValue(userData)
             .addOnSuccessListener {
                 Toast.makeText(
@@ -66,7 +66,7 @@ class Home : ComponentActivity() {
 }
 
 @IgnoreExtraProperties
-class UserData(var name: String, var birthday: String, var broIDDoNotKnow: String?)
+class UserData(var name: String, var birthday: String, var broIDoNotKnow: String?)
 
 @Composable
 fun ShowHomeFeed() {
@@ -76,7 +76,7 @@ fun ShowHomeFeed() {
             .fillMaxHeight()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        Text(text = "Dies ist ein Platzhalter-Text.\nHier wird der Home-Bildschirm angezeigt.")
+        Text(text = "Dies ist ein Platzhalter-Text123.\nHier wird der Home-Bildschirm angezeigt.")
     }
 }
 

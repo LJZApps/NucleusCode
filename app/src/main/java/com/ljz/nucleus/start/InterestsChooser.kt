@@ -96,8 +96,7 @@ class InterestsChooser : ComponentActivity() {
 fun InterestChooserMain() {
     Surface(
         modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
+            .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
         val context = LocalContext.current

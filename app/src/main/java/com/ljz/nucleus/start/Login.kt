@@ -79,6 +79,7 @@ import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.ljz.nucleus.Home
 import com.ljz.nucleus.R
 import com.ljz.nucleus.database.UserDBHelper
+import com.ljz.nucleus.ui.core.AppNavHost
 import com.ljz.nucleus.ui.theme.NucleusTheme
 import java.util.regex.Pattern
 
@@ -100,80 +101,16 @@ class Login : ComponentActivity() {
         setContent {
             NucleusTheme {
                 val navController = rememberNavController()
-
-                RegisterNavHost(navController = navController)
+                AppNavHost(navController = navController)
             }
         }
     }
 
 }
 
-@Composable
-fun RegisterNavHost(
-    modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController(),
-    startDestination: String = "checkEmail"
-) {
-    NavHost(
-        modifier = modifier,
-        navController = navController,
-        startDestination = startDestination
-    ) {
-        composable("checkEmail") {
-            EmailCheck(
-                navController = navController
-            )
-        }
-        composable(
-            "registerWithEmail?email={email}",
-            arguments = listOf(navArgument("email") { defaultValue = "null" })
-        ) { backStateEntry ->
-            backStateEntry.arguments?.getString("email")?.let {
-                RegisterHome(
-                    navController = navController,
-                    email = it
-                )
-            }
-
-            BackHandler(true) {
-                // Nothing
-            }
-        }
-        composable("registerAccountInformation") {
-            RegisterAccount(navController = navController)
-
-            BackHandler(true) {
-                // Nothing
-            }
-        }
-        composable("resetPassword") {
-            ResetPassword(navController = navController)
-
-            BackHandler(true) {
-                // Nothing
-            }
-        }
-        composable(
-            "loginWithEmail?email={email}",
-            arguments = listOf(
-                navArgument("email") { defaultValue = "null" }
-            )
-        ) { backStateEntry ->
-            backStateEntry.arguments?.getString("email")?.let {
-                LoginWithEmail(
-                    navToEmailCheck = { navController.navigate("checkEmail") },
-                    navController = navController,
-                    email = it
-                )
-            }
-
-            BackHandler(true) {
-                // Nothing
-            }
-        }
-    }
-}
-
+/**
+ * Checks if the user email is already registered with us
+ */
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun EmailCheck(
@@ -356,6 +293,9 @@ fun EmailCheck(
     }
 }
 
+/**
+ *
+ */
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterHome(
@@ -1564,7 +1504,6 @@ fun RegisterAccountInformationPreview() {
     }
 }
 
-/*
 @Preview
 @Composable
 fun EmailCheckPreview() {
@@ -1607,4 +1546,3 @@ fun RegisterWithEmailPreview() {
         )
     }
 }
- */
