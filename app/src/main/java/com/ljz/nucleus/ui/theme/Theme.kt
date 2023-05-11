@@ -39,14 +39,6 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
-private val ourDarkColorScheme = darkColorScheme(
-    primary = Color.Black, secondary = Color.White
-)
-
-private val ourLightColorScheme = lightColorScheme(
-    primary = Color.Yellow, secondary = Color.Black
-)
-
 @Composable
 fun NucleusTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

@@ -35,7 +35,6 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
-import com.ljz.nucleus.Home
 import com.ljz.nucleus.R
 import com.ljz.nucleus.database.UserDBHelper
 import com.ljz.nucleus.ui.theme.NucleusTheme
@@ -54,6 +53,7 @@ class Launcher : ComponentActivity() {
         startActivity(Intent(this, InterestsChooser::class.java))
         finish()
 
+        /*
         if (user != null) {
             startActivity(Intent(this, Home::class.java))
             finish()
@@ -66,6 +66,7 @@ class Launcher : ComponentActivity() {
         }
 
         askNotificationPermission()
+         */
     }
 
     // Declare the launcher at the top of your Activity/Fragment:

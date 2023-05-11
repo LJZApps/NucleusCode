@@ -1,42 +1,23 @@
 package com.ljz.nucleus.start
 
 import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -104,6 +85,7 @@ fun InterestChooserMain() {
             val (interestChooserTitle, interestChooserText, nextButton, skipButton, interestLayout, searchInput) = createRefs()
             val activity = (LocalContext.current as? Activity)
             val interests = remember { mutableStateListOf<Interest>() }
+            val chosenInterest = remember { mutableStateListOf<String>() }
             val searchInputState = remember { mutableStateOf(TextFieldValue()) }
 
             realTDB.child("interests").addListenerForSingleValueEvent(object : ValueEventListener {
@@ -184,27 +166,6 @@ fun InterestChooserMain() {
                          */
                     }
                 ),
-                /*
-                supportingText = {
-                    if (isErrorUsername) {
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = errorUsernameMessage,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    } else {
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = "Unter diesem Benutzernamen kann man dich finden."
-                        )
-                    }
-                },
-                trailingIcon = {
-                    if (isErrorName) {
-                        Icon(Icons.Filled.Info, "error", tint = MaterialTheme.colorScheme.error)
-                    }
-                },
-                 */
             )
 
             val state = rememberScrollState(initial = 0)
@@ -223,11 +184,17 @@ fun InterestChooserMain() {
             ) {
                 interests.forEach { interest ->
                     InputChip(
-                        onClick = { /* Do something! */ },
+                        onClick = {
+                            if (!chosenInterest.contains(interest.key)) {
+                                chosenInterest.add(interest.key)
+                            } else {
+                                chosenInterest.remove(interest.key)
+                            }
+                        },
                         label = { Text(interest.key) },
                         selected = false,
                         shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.padding(5.dp, 0.dp, 5.dp, 0.dp)
+                        modifier = Modifier.padding(5.dp, 0.dp, 5.dp, 0.dp),
                     )
                 }
             }
